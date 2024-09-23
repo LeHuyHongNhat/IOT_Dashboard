@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import "./Dashboard.css";
@@ -10,27 +10,40 @@ import bongdenbat from "./img/bongdenbat.jpg";
 import bongdentat from "./img/bongdentat.jpg";
 
 const Dashboard = () => {
-  const [fanOn, setFanOn] = useState(false);
-  const [acOn, setAcOn] = useState(false);
-  const [lightOn, setLightOn] = useState(false);
+  const [socket, setSocket] = useState();
 
-  const temperature = 45; // Giá trị nhiệt độ
-  const humidity = 73; // Giá trị độ ẩm
-  const light = 730; // Giá trị ánh sáng
+  const [data, setData] = useState({
+    temperature: 0,
+    humidity: 0,
+    light: 0,
+  })
 
-  const data1 = {
+  const [dataStore, setDataStore] = useState({
+    temperatures: [],
+    humiditys: [],
+    lights: [],
+    times: []
+  })
+
+  const [action, setAction] = useState({
+    isOnLed: false,
+    isOnAirConditioner: false,
+    isOnFan: false,
+  })
+
+  const dataChart1 = {
     labels: ["0", "1", "2", "3", "4", "5", "6"],
     datasets: [
       {
         label: "Temperature (°C)",
-        data: [23, 27, 32, 35, 41, 38, 27],
+        data: dataStore.temperatures,
         borderColor: "rgba(255, 99, 132, 1)",
         backgroundColor: "rgba(255, 99, 132, 0.2)",
         fill: true,
       },
       {
         label: "Humidity (%)",
-        data: [50, 45, 25, 10, 52, 73, 89],
+        data: dataStore.humiditys,
         borderColor: "rgba(54, 162, 235, 1)",
         backgroundColor: "rgba(54, 162, 235, 0.2)",
         fill: true,
@@ -38,12 +51,12 @@ const Dashboard = () => {
     ],
   };
 
-  const data2 = {
+  const dataChart2 = {
     labels: ["0", "1", "2", "3", "4", "5", "6"],
     datasets: [
       {
         label: "Light (nits)",
-        data: [350, 450, 710, 730, 620, 440, 360],
+        data: dataStore.lights,
         borderColor: "rgba(255, 206, 86, 1)",
         backgroundColor: "rgba(255, 206, 86, 0.2)",
         fill: true,
@@ -66,8 +79,46 @@ const Dashboard = () => {
     },
   };
 
+  useEffect(() => {
+    const socket = new WebSocket('ws://localhost:8080');
+    setSocket(socket)
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    socket.onmessage = (event) => {
+      const { topic, data } = JSON.parse(event.data);
+      if (topic === 'sensorData') {
+        setData(data);
+        setDataStore((stage) => {
+          return {
+            temperatures: [...stage.temperatures, data.temperature].slice(-7),
+            humiditys: [...stage.humiditys, data.humidity].slice(-7),
+            lights: [...stage.lights, data.light].slice(-7),
+            times: [...stage.times, data.createdAt].slice(-7),
+          };
+        })
+      }
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [])
+
+  const sendMessage = (data) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(data));
+    }
+  };
+
+
   const getBackgroundColor = (value, max, color) => {
-    const intensity = Math.min(value / max, 1); // Đảm bảo giá trị từ 0 đến 1
+    const intensity = Math.min(value / max, 1);
     return `rgba(${color}, ${intensity})`;
   };
 
@@ -81,7 +132,7 @@ const Dashboard = () => {
             <th
               style={{
                 backgroundColor: getBackgroundColor(
-                  temperature,
+                  data.temperature,
                   50,
                   "255, 99, 132"
                 ),
@@ -89,12 +140,12 @@ const Dashboard = () => {
             >
               Temperature 🌡️
               <br />
-              {temperature}°C
+              {data.temperature}°C
             </th>
             <th
               style={{
                 backgroundColor: getBackgroundColor(
-                  humidity,
+                  data.humidity,
                   100,
                   "54, 162, 235"
                 ),
@@ -102,12 +153,12 @@ const Dashboard = () => {
             >
               Humidity 💧
               <br />
-              {humidity}%
+              {data.humidity}%
             </th>
             <th
               style={{
                 backgroundColor: getBackgroundColor(
-                  light,
+                  data.light,
                   1000,
                   "255, 206, 86"
                 ),
@@ -115,7 +166,7 @@ const Dashboard = () => {
             >
               Light ☀️
               <br />
-              {light} nits
+              {data.light} nits
             </th>
             <th>Device</th>
           </tr>
@@ -124,57 +175,85 @@ const Dashboard = () => {
           <tr>
             <td colSpan="2" className="chart-cell">
               <div className="chart-container">
-                <Line data={data1} options={chartOptions} />
+                <Line data={dataChart1} options={chartOptions} />
               </div>
             </td>
             <td className="chart-cell">
               <div className="chart-container">
-                <Line data={data2} options={chartOptions} />
+                <Line data={dataChart2} options={chartOptions} />
               </div>
             </td>
             <td>
               <div className="device-controls">
                 <div className="device-item">
                   <img
-                    src={fanOn ? quatchay : quatdungyen}
+                    src={action.isOnFan ? quatchay : quatdungyen}
                     alt="Fan"
                     className="device-image"
                   />
                   <label className="switch">
                     <input
                       type="checkbox"
-                      checked={fanOn}
-                      onChange={() => setFanOn(!fanOn)}
+                      checked={action.isOnFan}
+                      onChange={(e) => {
+                        setAction((prev)=>({
+                          ...prev,
+                          isOnFan: e.target.checked
+                        }));
+                        sendMessage({
+                          topic: 'action/fan',
+                          message: e.target.checked ? 'on' : 'off'
+                        })
+                      }}
                     />
                     <span className="slider"></span>
                   </label>
                 </div>
+                
                 <div className="device-item">
                   <img
-                    src={lightOn ? bongdenbat : bongdentat}
-                    alt="Light"
-                    className="device-image"
-                  />
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={lightOn}
-                      onChange={() => setLightOn(!lightOn)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-                <div className="device-item">
-                  <img
-                    src={acOn ? dieuhoabat : dieuhoatat}
+                    src={action.isOnAirConditioner ? dieuhoabat : dieuhoatat}
                     alt="Air Conditioner"
                     className="device-image"
                   />
                   <label className="switch">
                     <input
                       type="checkbox"
-                      checked={acOn}
-                      onChange={() => setAcOn(!acOn)}
+                      checked={action.isOnAirConditioner}
+                      onChange={(e) => {
+                        setAction((prev)=>({
+                          ...prev,
+                          isOnAirConditioner: e.target.checked
+                        }));
+                        sendMessage({
+                          topic: 'action/air_conditioner',
+                          message: e.target.checked ? 'on' : 'off'
+                        })
+                      }}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <div className="device-item">
+                  <img
+                    src={action.isOnLed ? bongdenbat : bongdentat}
+                    alt="Light"
+                    className="device-image"
+                  />
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={action.isOnLed}
+                      onChange={(e) => {
+                        setAction((prev)=>({
+                          ...prev,
+                          isOnLed: e.target.checked
+                        }));
+                        sendMessage({
+                          topic: 'action/led',
+                          message: e.target.checked ? 'on' : 'off'
+                        })
+                      }}
                     />
                     <span className="slider"></span>
                   </label>
