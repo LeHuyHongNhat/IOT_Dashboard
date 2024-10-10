@@ -1,6 +1,6 @@
 # IoT Dashboard
 
-![IoT Dashboard Logo](link_to_logo_image)
+![IoT Dashboard Logo](FE/public/IoT-1.jpg)
 
 ## Giới thiệu
 
