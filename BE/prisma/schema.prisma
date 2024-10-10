@@ -1,0 +1,39 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model SensorData {
+  id          Int      @id @default(autoincrement())
+  temperature Int
+  humidity    Int
+  light       Int
+  createdAt   DateTime @default(now())
+
+  @@map("sensor_data")
+}
+
+model ActionHistory {
+  id        Int      @id @default(autoincrement())
+  device    Device
+  action    Action
+  createdAt DateTime @default(now())
+
+  @@map("action_history")
+}
+
+enum Device {
+  LED
+  FAN
+  AIR_CONDITIONER
+}
+
+enum Action {
+  ON
+  OFF
+}

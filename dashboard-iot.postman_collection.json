@@ -1,0 +1,96 @@
+{
+  "info": {
+    "_postman_id": "22c8694c-8278-42d1-a63a-cd6191f67756",
+    "name": "dashboard-iot",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33120166"
+  },
+  "item": [
+    {
+      "name": "data sensor table",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/table/data?content=488&searchBy=ALL&page=2&pageSize=10&startTime=2024-09-24 11:12:14&endTime=2024-09-24 11:13:13&orderBy=TEMPERATURE&sortBy=ASC",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["table", "data"],
+          "query": [
+            {
+              "key": "content",
+              "value": "488"
+            },
+            {
+              "key": "searchBy",
+              "value": "ALL"
+            },
+            {
+              "key": "page",
+              "value": "2"
+            },
+            {
+              "key": "pageSize",
+              "value": "10"
+            },
+            {
+              "key": "startTime",
+              "value": "2024-09-24 11:12:14"
+            },
+            {
+              "key": "endTime",
+              "value": "2024-09-24 11:13:13"
+            },
+            {
+              "key": "orderBy",
+              "value": "TEMPERATURE"
+            },
+            {
+              "key": "sortBy",
+              "value": "ASC"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "action history table",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/table/data?searchBy=LED&page=2&pageSize=10&startTime=2024-09-24 11:12:14&endTime=2024-09-24 11:13:13",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["table", "data"],
+          "query": [
+            {
+              "key": "searchBy",
+              "value": "LED"
+            },
+            {
+              "key": "page",
+              "value": "2"
+            },
+            {
+              "key": "pageSize",
+              "value": "10"
+            },
+            {
+              "key": "startTime",
+              "value": "2024-09-24 11:12:14"
+            },
+            {
+              "key": "endTime",
+              "value": "2024-09-24 11:13:13"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
