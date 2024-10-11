@@ -1,11 +1,13 @@
+/* Định dạng cho container chứa menu */
 .menu-container {
   border-radius: 50;
   top: 25px;
   left: 20px;
   cursor: pointer;
-  position: fixed;
+  position: fixed; /* Cố định vị trí trên màn hình */
 }
 
+/* Định dạng cho icon menu */
 .iconmenu {
   font-size: 20px;
   color: black;
@@ -13,14 +15,16 @@
   background: #e7e7e7;
   border-radius: 50%;
   position: relative;
-  z-index: 111;
+  z-index: 111; /* Đảm bảo icon luôn hiển thị trên cùng */
   cursor: pointer;
 }
 
+/* Hiệu ứng hover cho icon menu */
 .iconmenu:hover {
   background: #f3f2f2cc;
 }
 
+/* Định dạng cho nút đóng menu */
 .iconexit {
   font-size: 40px;
   font-weight: 300px;
@@ -34,10 +38,12 @@
   top: 10px;
 }
 
+/* Hiệu ứng hover cho nút đóng */
 .iconexit:hover {
   color: rgba(71, 71, 71, 0.523);
 }
 
+/* Định dạng cho menu khi mở */
 .menu {
   position: fixed;
   top: 0px;
@@ -50,6 +56,7 @@
   padding-left: 30px;
 }
 
+/* Định dạng cho phần header của menu */
 .menu-header {
   position: absolute;
   top: 0px;
@@ -60,6 +67,7 @@
   background: rgb(152, 152, 152);
 }
 
+/* Định dạng cho các link trong menu */
 .linkmenu {
   text-decoration: none;
   font-size: 30px;
@@ -67,6 +75,7 @@
   color: #141414;
 }
 
+/* Định dạng cho các nút trong menu */
 .ulLink {
   border-radius: 10px;
   width: 85%;
@@ -77,6 +86,7 @@
   font-size: 18px;
 }
 
+/* Hiệu ứng hover cho các nút trong menu */
 .ulLink:hover {
   background: #e7e7e7;
 }

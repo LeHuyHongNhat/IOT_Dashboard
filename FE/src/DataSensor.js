@@ -5,14 +5,18 @@ import axiosClient from "./axios-client";
 import { createQueryString, mappingDataSensor } from "./util";
 
 const DataSensorTable = () => {
+  // State để lưu trữ dữ liệu cảm biến
   const [data, setData] = useState();
+  // State để lưu trữ tổng số trang
   const [totalPage, setTotalPage] = useState();
+  // State để lưu trữ các điều kiện lọc
   const [filter, setFilter] = useState({
     content: "",
     searchBy: "ALL",
     time: "",
   });
 
+  // State để lưu trữ thông tin phân trang
   const [page, setPage] = useState({
     page: 1,
     pageSize: 10,
@@ -20,11 +24,13 @@ const DataSensorTable = () => {
     orderBy: null,
   });
 
+  // State để lưu trữ cấu hình sắp xếp
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: null,
   });
 
+  // Hàm để lấy dữ liệu cảm biến từ server
   const getActionHistory = async () => {
     const queryString = createQueryString(filter, page);
     const sensorDatas = await axiosClient.get(`/table/data${queryString}`);
@@ -32,10 +38,12 @@ const DataSensorTable = () => {
     setTotalPage(Math.ceil(sensorDatas.meta.totalCount / page.pageSize));
   };
 
+  // Gọi API mỗi khi thông tin phân trang thay đổi
   useEffect(() => {
     getActionHistory();
   }, [page]);
 
+  // Hàm xử lý khi thay đổi trang
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPage) {
       setPage((prev) => ({
@@ -45,6 +53,7 @@ const DataSensorTable = () => {
     }
   };
 
+  // Hàm xử lý sắp xếp dữ liệu
   const requestSort = (key) => {
     let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {

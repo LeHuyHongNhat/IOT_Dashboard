@@ -6,7 +6,10 @@ const char* ssid = "Px0x";
 const char* password = "11335577";
 const char* mqtt_server = "192.168.0.102";  // CHANGE HERE
 const int mqtt_port = 1883;
-const char* mqtt_topic = "esp32/sensors";
+const char* mqtt_topic_sensors = "esp32/sensors";
+const char* mqtt_topic_led = "esp32/deviceStatus/led";
+const char* mqtt_topic_air_conditioner = "esp32/deviceStatus/air_conditioner";
+const char* mqtt_topic_fan = "esp32/deviceStatus/fan";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -19,6 +22,10 @@ PubSubClient client(espClient);
 #define FAN_PIN 27
 
 DHT dht(DHT_PIN, DHTTYPE);
+
+unsigned long lastMsg = 0;
+const long interval = 2000;  // Interval at which to publish sensor readings
+
 void setup_wifi() {
   Serial.println();
   Serial.print("Connecting to ");
@@ -35,6 +42,12 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+}
+
+void publishDeviceStatus() {
+  client.publish(mqtt_topic_led, digitalRead(LED_PIN) == HIGH ? "on" : "off");
+  client.publish(mqtt_topic_air_conditioner, digitalRead(AIR_CONDITIONER_PIN) == HIGH ? "on" : "off");
+  client.publish(mqtt_topic_fan, digitalRead(FAN_PIN) == HIGH ? "on" : "off");
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -64,6 +77,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (strcmp(charMessage, "on") == 0) digitalWrite(FAN_PIN, HIGH);
     if (strcmp(charMessage, "off") == 0) digitalWrite(FAN_PIN, LOW);
   }
+
+  // Publish device status after changing state
+  publishDeviceStatus();
 }
 
 void reconnect() {
@@ -101,22 +117,29 @@ void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  int humidity = round(dht.readHumidity());
-  int temperature = round(dht.readTemperature());
-  int light = ceil(analogRead(QUANG_TRO_PIN)/4) + 1;
-
-  String payload = "{\"temperature\": ";
-  payload += temperature;
-  payload += ", \"humidity\": ";
-  payload += humidity;
-   payload += ", \"light\": ";
-   payload += light;
-  payload += "}";
-  Serial.println( payload);
-
-  // Gửi dữ liệu lên MQTT
-  client.publish(mqtt_topic, payload.c_str());
-
   client.loop();
-  delay(1000);
+
+  unsigned long now = millis();
+  if (now - lastMsg > interval) {
+    lastMsg = now;
+
+    int humidity = round(dht.readHumidity());
+    int temperature = round(dht.readTemperature());
+    int light = ceil(analogRead(QUANG_TRO_PIN)/4) + 1;
+
+    String payload = "{\"temperature\": ";
+    payload += temperature;
+    payload += ", \"humidity\": ";
+    payload += humidity;
+    payload += ", \"light\": ";
+    payload += light;
+    payload += "}";
+    Serial.println(payload);
+
+    // Gửi dữ liệu lên MQTT
+    client.publish(mqtt_topic_sensors, payload.c_str());
+
+    // Publish device status
+    publishDeviceStatus();
+  }
 }

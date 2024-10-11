@@ -1,3 +1,4 @@
+/* Styles cho container chứa phần tìm kiếm */
 .search-container-wrapper {
   display: flex;
   justify-content: center;
@@ -5,6 +6,7 @@
   margin-bottom: 20px;
 }
 
+/* Styles cho phần tìm kiếm */
 .search-container {
   display: flex;
   justify-content: space-between;
@@ -13,6 +15,7 @@
   gap: 10px;
 }
 
+/* Styles cho ô input tìm kiếm */
 .search-box {
   flex-grow: 1;
   height: 36px;
@@ -22,6 +25,7 @@
   font-size: 14px;
 }
 
+/* Styles cho dropdown trong phần tìm kiếm */
 .search-container select {
   height: 36px;
   padding: 0 10px;
@@ -30,6 +34,7 @@
   font-size: 14px;
 }
 
+/* Styles cho nút tìm kiếm */
 .search-container button {
   height: 36px;
   padding: 0 15px;
@@ -42,11 +47,12 @@
   transition: background-color 0.3s;
 }
 
+/* Hiệu ứng hover cho nút tìm kiếm */
 .search-container button:hover {
   background-color: #0056b3;
 }
 
-/* Pagination styles */
+/* Styles cho phần phân trang */
 .pagination-wrapper {
   margin-top: 30px;
   padding: 15px 0;
@@ -54,6 +60,7 @@
   border-top: 1px solid #e9ecef;
 }
 
+/* Layout cho phần phân trang */
 .pagination {
   display: flex;
   justify-content: center;
@@ -61,6 +68,7 @@
   gap: 15px;
 }
 
+/* Styles cho nút phân trang */
 .pagination-button {
   padding: 8px 15px;
   background-color: #007bff;
@@ -72,22 +80,26 @@
   font-weight: bold;
 }
 
+/* Hiệu ứng hover cho nút phân trang */
 .pagination-button:hover:not(:disabled) {
   background-color: #0056b3;
   transform: translateY(-2px);
 }
 
+/* Styles cho nút phân trang bị vô hiệu hóa */
 .pagination-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
 
+/* Styles cho thông tin trang hiện tại */
 .pagination-info {
   font-size: 16px;
   font-weight: bold;
   color: #333;
 }
 
+/* Styles cho phần chọn số lượng item trên mỗi trang */
 .page-size-selector {
   display: flex;
   align-items: center;
@@ -95,11 +107,13 @@
   margin-top: 10px;
 }
 
+/* Styles cho label của dropdown chọn số lượng item */
 .page-size-selector label {
   margin-right: 10px;
   font-weight: bold;
 }
 
+/* Styles cho dropdown chọn số lượng item */
 .page-size-selector select {
   height: 30px;
   padding: 0 10px;
@@ -109,14 +123,14 @@
   cursor: pointer;
 }
 
-/* Điều chỉnh container chính */
+/* Styles cho container chính */
 .container {
   display: flex;
   flex-direction: column;
   min-height: 100vh; /* Đảm bảo container chiếm toàn bộ chiều cao của viewport */
 }
 
-/* Đẩy phần phân trang xuống cuối */
+/* Đẩy phần phân trang xuống cuối container */
 .container > *:last-child {
   margin-top: auto;
 }

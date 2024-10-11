@@ -1,3 +1,4 @@
+/* Thiết lập cơ bản cho body */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -5,6 +6,7 @@ body {
   background-color: #f4f4f4;
 }
 
+/* Styles cho thanh điều hướng */
 nav {
   background-color: #333;
   padding: 10px;
@@ -23,10 +25,12 @@ nav button:hover {
   background-color: #777;
 }
 
+/* Styles cho nội dung chính của trang */
 .page-content {
   padding: 20px;
 }
 
+/* Styles cho bảng */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -52,10 +56,12 @@ table tr:hover {
   background-color: #ddd;
 }
 
+/* Style cho icon */
 .icon {
   margin-right: 5px;
 }
 
+/* Styles cho phần điều khiển thiết bị */
 .device-control {
   display: flex;
   flex-direction: column;
@@ -67,6 +73,7 @@ table tr:hover {
   margin-bottom: 10px;
 }
 
+/* Styles cho công tắc */
 .switch {
   position: relative;
   display: inline-block;
@@ -113,7 +120,7 @@ input:checked + .slider:before {
   transform: translateX(14px);
 }
 
-/* Styles for profile section */
+/* Styles cho phần profile */
 #profile img {
   width: 150px;
   height: 150px;

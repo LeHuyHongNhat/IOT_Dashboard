@@ -1,3 +1,4 @@
+/* Định dạng cho container chứa toàn bộ profile */
 .profile-container {
   display: flex;
   justify-content: center;
@@ -7,6 +8,7 @@
   padding: 20px;
 }
 
+/* Định dạng cho tiêu đề profile */
 .profile-heading {
   text-align: justify;
   margin-bottom: 20px;
@@ -14,6 +16,7 @@
   color: #333;
 }
 
+/* Định dạng cho card chứa thông tin profile */
 .profile-card {
   background-color: white;
   border-radius: 10px;
@@ -24,10 +27,12 @@
   transition: transform 0.3s ease;
 }
 
+/* Hiệu ứng hover cho profile card */
 .profile-card:hover {
   transform: translateY(-5px);
 }
 
+/* Định dạng cho phần header của profile */
 .profile-header {
   background-color: #4a90e2;
   color: white;
@@ -35,6 +40,7 @@
   text-align: center;
 }
 
+/* Định dạng cho ảnh đại diện */
 .profile-image {
   width: 150px;
   height: 150px;
@@ -44,44 +50,52 @@
   object-fit: cover;
 }
 
+/* Định dạng cho tên người dùng */
 .profile-name {
   margin: 0;
   font-size: 24px;
   font-weight: bold;
 }
 
+/* Định dạng cho chức danh */
 .profile-title {
   margin: 5px 0 0;
   font-size: 16px;
   opacity: 0.8;
 }
 
+/* Định dạng cho phần thân của profile */
 .profile-body {
   padding: 30px;
 }
 
+/* Định dạng cho từng dòng thông tin */
 .profile-info {
   margin: 15px 0;
   display: flex;
   align-items: center;
 }
 
+/* Định dạng cho label của thông tin */
 .profile-info strong {
   min-width: 100px;
   display: inline-block;
 }
 
+/* Định dạng cho icon */
 .icon {
   margin-right: 10px;
   color: #4a90e2;
 }
 
+/* Định dạng cho các liên kết */
 a {
   color: #4a90e2;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
+/* Hiệu ứng hover cho liên kết */
 a:hover {
   color: #2a6496;
   text-decoration: underline;

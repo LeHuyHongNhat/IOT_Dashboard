@@ -5,10 +5,11 @@ import DataSensor from "./DataSensor";
 import ActionHistory from "./ActionHistory";
 import Profile from "./Profile";
 
-// App.use("/local-files", express.static("/"));
 const App = () => {
+  // State để lưu trữ trang hiện tại
   const [currentPage, setCurrentPage] = useState("Dashboard");
 
+  // Hàm để render component tương ứng với trang hiện tại
   const renderPage = () => {
     switch (currentPage) {
       case "Dashboard":
@@ -20,12 +21,13 @@ const App = () => {
       case "Profile":
         return <Profile />;
       default:
-        return <Dashboard />;
+        return <Dashboard />; // Mặc định hiển thị Dashboard
     }
   };
 
   return (
     <div>
+      {/* Thanh điều hướng */}
       <nav>
         <button onClick={() => setCurrentPage("Dashboard")}>Dashboard</button>
         <button onClick={() => setCurrentPage("DataSensor")}>
@@ -36,6 +38,7 @@ const App = () => {
         </button>
         <button onClick={() => setCurrentPage("Profile")}>Profile</button>
       </nav>
+      {/* Phần nội dung chính */}
       <div className="page-content">{renderPage()}</div>
     </div>
   );

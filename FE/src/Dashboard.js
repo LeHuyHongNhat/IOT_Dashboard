@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Line } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import "./Dashboard.css";
@@ -9,8 +9,10 @@ import dieuhoatat from "./img/dieuhoatat.jpg";
 import bongdenbat from "./img/bongdenbat.jpg";
 import bongdentat from "./img/bongdentat.jpg";
 
+const MAX_DATA_POINTS = 12;
+
 const Dashboard = () => {
-  const [socket, setSocket] = useState();
+  const [socket, setSocket] = useState(null);
 
   const [data, setData] = useState({
     temperature: 0,
@@ -18,17 +20,27 @@ const Dashboard = () => {
     light: 0,
   });
 
-  const [dataStore, setDataStore] = useState({
-    temperatures: [],
-    humiditys: [],
-    lights: [],
-    times: [],
+  const [dataStore, setDataStore] = useState(() => {
+    const savedData = localStorage.getItem("chartData");
+    return savedData
+      ? JSON.parse(savedData)
+      : {
+          temperatures: [],
+          humiditys: [],
+          lights: [],
+          times: [],
+        };
   });
 
-  const [action, setAction] = useState({
-    isOnLed: false,
-    isOnAirConditioner: false,
-    isOnFan: false,
+  const [deviceStates, setDeviceStates] = useState(() => {
+    const savedDeviceStates = localStorage.getItem("deviceStates");
+    return savedDeviceStates
+      ? JSON.parse(savedDeviceStates)
+      : {
+          fan: { status: false, loading: false },
+          air_conditioner: { status: false, loading: false },
+          led: { status: false, loading: false },
+        };
   });
 
   const formatTime = (dateString) => {
@@ -41,7 +53,7 @@ const Dashboard = () => {
   };
 
   const dataChart1 = {
-    labels: dataStore.times.map(formatTime),
+    labels: dataStore.times,
     datasets: [
       {
         label: "Temperature (°C)",
@@ -61,7 +73,7 @@ const Dashboard = () => {
   };
 
   const dataChart2 = {
-    labels: dataStore.times.map(formatTime),
+    labels: dataStore.times,
     datasets: [
       {
         label: "Light (nits)",
@@ -94,42 +106,80 @@ const Dashboard = () => {
     },
   };
 
+  const sendMessage = useCallback(
+    (device, action) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        setDeviceStates((prev) => {
+          const newStates = {
+            ...prev,
+            [device]: { ...prev[device], loading: true },
+          };
+          localStorage.setItem("deviceStates", JSON.stringify(newStates));
+          return newStates;
+        });
+        socket.send(
+          JSON.stringify({
+            topic: `action/${device}`,
+            message: action,
+          })
+        );
+      }
+    },
+    [socket]
+  );
+
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080");
-    setSocket(socket);
-    socket.onopen = () => {
+    const newSocket = new WebSocket("ws://localhost:8080");
+    setSocket(newSocket);
+
+    newSocket.onopen = () => {
       console.log("WebSocket connected");
+      // Khi kết nối lại, gửi yêu cầu cập nhật trạng thái thiết bị
+      newSocket.send(JSON.stringify({ topic: "getDeviceStatus" }));
     };
 
-    socket.onclose = () => {
+    newSocket.onclose = () => {
       console.log("WebSocket disconnected");
     };
 
-    socket.onmessage = (event) => {
+    newSocket.onmessage = (event) => {
       const { topic, data } = JSON.parse(event.data);
       if (topic === "sensorData") {
         setData(data);
-        setDataStore((stage) => {
-          return {
-            temperatures: [...stage.temperatures, data.temperature].slice(-7),
-            humiditys: [...stage.humiditys, data.humidity].slice(-7),
-            lights: [...stage.lights, data.light].slice(-7),
-            times: [...stage.times, data.createdAt].slice(-7),
+        setDataStore((prev) => {
+          const newDataStore = {
+            temperatures: [...prev.temperatures, data.temperature].slice(
+              -MAX_DATA_POINTS
+            ),
+            humiditys: [...prev.humiditys, data.humidity].slice(
+              -MAX_DATA_POINTS
+            ),
+            lights: [...prev.lights, data.light].slice(-MAX_DATA_POINTS),
+            times: [...prev.times, new Date().toLocaleTimeString()].slice(
+              -MAX_DATA_POINTS
+            ),
           };
+          localStorage.setItem("chartData", JSON.stringify(newDataStore));
+          return newDataStore;
+        });
+      } else if (topic.startsWith("deviceStatus/")) {
+        const device = topic.split("/")[1];
+        const status = data === "on";
+        setDeviceStates((prev) => {
+          const newStates = {
+            ...prev,
+            [device]: { status, loading: false },
+          };
+          localStorage.setItem("deviceStates", JSON.stringify(newStates));
+          return newStates;
         });
       }
     };
 
     return () => {
-      socket.close();
+      newSocket.close();
     };
   }, []);
-
-  const sendMessage = (data) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(data));
-    }
-  };
 
   const getBackgroundColor = (value, max, color) => {
     const intensity = Math.min(value / max, 1);
@@ -199,84 +249,62 @@ const Dashboard = () => {
             </td>
             <td>
               <div className="device-controls">
-                <div className="device-item">
-                  <img
-                    src={action.isOnFan ? quatchay : quatdungyen}
-                    alt="Fan"
-                    className="device-image"
-                  />
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={action.isOnFan}
-                      onChange={(e) => {
-                        setAction((prev) => ({
-                          ...prev,
-                          isOnFan: e.target.checked,
-                        }));
-                        sendMessage({
-                          topic: "action/fan",
-                          message: e.target.checked ? "on" : "off",
-                        });
-                      }}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-
-                <div className="device-item">
-                  <img
-                    src={action.isOnAirConditioner ? dieuhoabat : dieuhoatat}
-                    alt="Air Conditioner"
-                    className="device-image"
-                  />
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={action.isOnAirConditioner}
-                      onChange={(e) => {
-                        setAction((prev) => ({
-                          ...prev,
-                          isOnAirConditioner: e.target.checked,
-                        }));
-                        sendMessage({
-                          topic: "action/air_conditioner",
-                          message: e.target.checked ? "on" : "off",
-                        });
-                      }}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-                <div className="device-item">
-                  <img
-                    src={action.isOnLed ? bongdenbat : bongdentat}
-                    alt="Light"
-                    className="device-image"
-                  />
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={action.isOnLed}
-                      onChange={(e) => {
-                        setAction((prev) => ({
-                          ...prev,
-                          isOnLed: e.target.checked,
-                        }));
-                        sendMessage({
-                          topic: "action/led",
-                          message: e.target.checked ? "on" : "off",
-                        });
-                      }}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
+                <DeviceControl
+                  name="fan"
+                  label="Fan"
+                  imageOn={quatchay}
+                  imageOff={quatdungyen}
+                  state={deviceStates.fan}
+                  onChange={(checked) =>
+                    sendMessage("fan", checked ? "on" : "off")
+                  }
+                />
+                <DeviceControl
+                  name="air_conditioner"
+                  label="Air Conditioner"
+                  imageOn={dieuhoabat}
+                  imageOff={dieuhoatat}
+                  state={deviceStates.air_conditioner}
+                  onChange={(checked) =>
+                    sendMessage("air_conditioner", checked ? "on" : "off")
+                  }
+                />
+                <DeviceControl
+                  name="led"
+                  label="LED"
+                  imageOn={bongdenbat}
+                  imageOff={bongdentat}
+                  state={deviceStates.led}
+                  onChange={(checked) =>
+                    sendMessage("led", checked ? "on" : "off")
+                  }
+                />
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+  );
+};
+
+const DeviceControl = ({ name, label, imageOn, imageOff, state, onChange }) => {
+  return (
+    <div className="device-item">
+      <img
+        src={state.status ? imageOn : imageOff}
+        alt={label}
+        className="device-image"
+      />
+      <label className={`switch ${state.loading ? "loading" : ""}`}>
+        <input
+          type="checkbox"
+          checked={state.status}
+          onChange={(e) => onChange(e.target.checked)}
+          disabled={state.loading}
+        />
+        <span className="slider"></span>
+      </label>
     </div>
   );
 };

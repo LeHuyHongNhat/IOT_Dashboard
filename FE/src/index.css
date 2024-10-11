@@ -1,13 +1,16 @@
+/* Thiết lập cơ bản cho body */
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  margin: 0; /* Loại bỏ margin mặc định */
+  /* Thiết lập font chữ cho toàn bộ trang web */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased; /* Làm mượt font chữ trên WebKit browsers */
+  -moz-osx-font-smoothing: grayscale; /* Làm mượt font chữ trên Firefox */
 }
 
+/* Thiết lập font chữ cho các phần tử code */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }

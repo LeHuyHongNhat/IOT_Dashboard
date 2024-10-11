@@ -13,6 +13,13 @@ const actionHistoryModel = require("./models/actionHistory.js");
 
 require("dotenv").config();
 
+// Thêm đối tượng để lưu trữ trạng thái thiết bị
+const deviceStates = {
+  fan: false,
+  air_conditioner: false,
+  led: false,
+};
+
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -62,31 +69,53 @@ wss.on("connection", (ws, req) => {
     console.log(`Received message: ${data}`);
     const { topic, message } = JSON.parse(data);
 
-    let xxxx = {};
-    if (topic == "action/air_conditioner") {
-      (xxxx.device = Device.AIR_CONDITIONER),
-        (xxxx.action = message == "on" ? Action.ON : Action.OFF);
+    if (topic === "getDeviceStatus") {
+      // Gửi trạng thái hiện tại của tất cả các thiết bị
+      Object.entries(deviceStates).forEach(([device, status]) => {
+        ws.send(
+          JSON.stringify({
+            topic: `deviceStatus/${device}`,
+            data: status ? "on" : "off",
+          })
+        );
+      });
+    } else {
+      let deviceAction = {};
+      let deviceTopic = "";
+      if (topic == "action/air_conditioner") {
+        deviceAction.device = Device.AIR_CONDITIONER;
+        deviceTopic = "air_conditioner";
+      } else if (topic == "action/fan") {
+        deviceAction.device = Device.FAN;
+        deviceTopic = "fan";
+      } else if (topic == "action/led") {
+        deviceAction.device = Device.LED;
+        deviceTopic = "led";
+      }
+      deviceAction.action = message == "on" ? Action.ON : Action.OFF;
+
+      await actionHistoryModel.createActionHistory(deviceAction);
+      mqttClient.publish(topic, message);
+
+      // Cập nhật trạng thái thiết bị
+      deviceStates[deviceTopic] = message === "on";
+
+      // Giả lập phản hồi từ hardware sau 1 giây
+      setTimeout(() => {
+        const statusTopic = `esp32/deviceStatus/${deviceTopic}`;
+        mqttClient.publish(statusTopic, message);
+      }, 1500);
     }
-    if (topic == "action/fan") {
-      (xxxx.device = Device.FAN),
-        (xxxx.action = message == "on" ? Action.ON : Action.OFF);
-    }
-    if (topic == "action/led") {
-      (xxxx.device = Device.LED),
-        (xxxx.action = message == "on" ? Action.ON : Action.OFF);
-    }
-    await actionHistoryModel.createActionHistory(xxxx);
-    mqttClient.publish(topic, message);
   });
 });
 
-const topics = ["esp32/sensors"];
+const topics = ["esp32/sensors", "esp32/deviceStatus/#"];
 
 mqttClient.on("connect", () => {
   topics.forEach((topic) => {
     mqttClient.subscribe(topic, (err) => {
       if (!err) {
-        console.log("Subscribed to sensor data");
+        console.log(`Subscribed to ${topic}`);
       }
     });
   });
@@ -95,11 +124,9 @@ mqttClient.on("connect", () => {
 mqttClient.on("message", async (topic, message) => {
   try {
     if (topic == "esp32/sensors") {
-      const data = JSON.parse(message.toString()); //Example:  { temperature: 33, humidity: 82, light: 440 }
-      // Lưu dữ liệu vào MySQL
+      const data = JSON.parse(message.toString());
       const savedData = await dataSensorModel.createDataSensor(data);
 
-      // Phát dữ liệu đến tất cả các client WebSocket đang kết nối
       clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(
@@ -107,11 +134,28 @@ mqttClient.on("message", async (topic, message) => {
               topic: "sensorData",
               data: savedData,
             })
-          ); // Gửi dữ liệu đã lưu đến client
+          );
+        }
+      });
+    } else if (topic.startsWith("esp32/deviceStatus/")) {
+      const device = topic.split("/")[2];
+      const status = message.toString();
+
+      // Cập nhật trạng thái thiết bị
+      deviceStates[device] = status === "on";
+
+      clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(
+            JSON.stringify({
+              topic: `deviceStatus/${device}`,
+              data: status,
+            })
+          );
         }
       });
     }
   } catch (error) {
-    console.error("Error saving data or sending via WebSocket:", error);
+    console.error("Error processing MQTT message:", error);
   }
 });
