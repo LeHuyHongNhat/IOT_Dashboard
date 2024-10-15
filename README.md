@@ -25,7 +25,7 @@ Lê Huy Hồng Nhật - Sinh viên tại Học viện Công nghệ Bưu chính V
 ## Tính năng
 
 - **Hiển thị dữ liệu cảm biến theo thời gian thực**: Cập nhật liên tục các chỉ số như nhiệt độ, độ ẩm, ánh sáng từ các thiết bị IoT.
-- **Điều khiển thiết bị IoT từ xa**: Bật/tắt đèn, quạt và các thiết bị khác thông qua dashboard.
+- **Điều khiển thiết bị IoT từ xa**: Bật/tắt các thiết bị thông qua dashboard.
 - **Giao diện người dùng thân thiện và responsive**: Thiết kế tương thích với nhiều kích thước màn hình.
 - **Xác thực và phân quyền người dùng**: Hệ thống đăng nhập an toàn và quản lý quyền truy cập.
 - **Lưu trữ và phân tích dữ liệu lịch sử**: Khả năng xem lại và phân tích dữ liệu theo thời gian.
@@ -62,7 +62,7 @@ Dự án được chia thành ba phần chính:
 - **MQTT**: Giao thức nhẹ để kết nối với thiết bị IoT
 - **WebSocket** và **Socket.io**: Cho kết nối realtime giữa server và client
 - **JWT (JSON Web Tokens)**: Xác thực và bảo mật API
-- **PostgreSQL**: Hệ quản trị cơ sở dữ liệu quan hệ
+- **MySQL**: Hệ quản trị cơ sở dữ liệu quan hệ
 
 ### Frontend
 
@@ -85,7 +85,7 @@ Dự án được chia thành ba phần chính:
 
 - Node.js (v14.0.0 trở lên)
 - npm (v6.0.0 trở lên)
-- PostgreSQL (v12.0 trở lên)
+- MySQL (v8.0 trở lên)
 - Arduino IDE (v1.8.0 trở lên)
 
 ### Backend
@@ -151,17 +151,16 @@ Dự án được chia thành ba phần chính:
 ## Sử dụng
 
 1. Truy cập dashboard thông qua trình duyệt web tại `http://localhost:3000`
-2. Đăng nhập với tài khoản được cung cấp (mặc định: admin/admin)
-3. Xem dữ liệu cảm biến và điều khiển thiết bị từ giao diện dashboard
-4. Sử dụng các tính năng như:
+2. Xem dữ liệu cảm biến và điều khiển thiết bị từ giao diện dashboard
+3. Sử dụng các tính năng như:
    - Xem biểu đồ dữ liệu theo thời gian thực
-   - Điều khiển thiết bị (bật/tắt đèn, quạt)
+   - Điều khiển thiết bị
    - Xem lịch sử dữ liệu
-   - Cấu hình cảnh báo
+   - Xem thông tin cá nhân
 
 ## API Documentation
 
-Chi tiết về các API có sẵn và cách sử dụng chúng có thể được tìm thấy trong [API Documentation](https://documenter.getpostman.com/view/your-api-doc-id).
+Chi tiết về các API có sẵn và cách sử dụng chúng có thể được tìm thấy trong [API Documentation](https://schema.getpostman.com/json/collection/v2.1.0/collection.json).
 
 Các endpoint chính bao gồm:
 
