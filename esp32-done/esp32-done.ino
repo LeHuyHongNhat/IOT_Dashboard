@@ -2,9 +2,11 @@
 #include <PubSubClient.h>
 #include <DHT.h>
 #include <math.h>
+
+// Thông tin kết nối WiFi và MQTT
 const char* ssid = "Px0x";
 const char* password = "11335577";
-const char* mqtt_server = "192.168.0.102";  // CHANGE HERE
+const char* mqtt_server = "192.168.0.102";  // Địa chỉ MQTT server
 const int mqtt_port = 1883;
 const char* mqtt_topic_sensors = "esp32/sensors";
 const char* mqtt_topic_led = "esp32/deviceStatus/led";
@@ -14,6 +16,7 @@ const char* mqtt_topic_fan = "esp32/deviceStatus/fan";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+// Định nghĩa các chân kết nối
 #define DHT_PIN 13
 #define QUANG_TRO_PIN 34
 #define DHTTYPE DHT11
@@ -24,8 +27,9 @@ PubSubClient client(espClient);
 DHT dht(DHT_PIN, DHTTYPE);
 
 unsigned long lastMsg = 0;
-const long interval = 2000;  // Interval at which to publish sensor readings
+const long interval = 2000;  // Khoảng thời gian giữa các lần gửi dữ liệu cảm biến
 
+// Hàm kết nối WiFi
 void setup_wifi() {
   Serial.println();
   Serial.print("Connecting to ");
@@ -44,12 +48,14 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+// Hàm gửi trạng thái thiết bị lên MQTT
 void publishDeviceStatus() {
   client.publish(mqtt_topic_led, digitalRead(LED_PIN) == HIGH ? "on" : "off");
   client.publish(mqtt_topic_air_conditioner, digitalRead(AIR_CONDITIONER_PIN) == HIGH ? "on" : "off");
   client.publish(mqtt_topic_fan, digitalRead(FAN_PIN) == HIGH ? "on" : "off");
 }
 
+// Hàm callback xử lý khi nhận được tin nhắn từ MQTT
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -63,6 +69,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   char charMessage[length + 1];
   message.toCharArray(charMessage, length + 1);
 
+  // Xử lý tin nhắn điều khiển thiết bị
   if (strcmp(topic, "action/led") == 0) {
     if (strcmp(charMessage, "on") == 0) digitalWrite(LED_PIN, HIGH);
     if (strcmp(charMessage, "off") == 0) digitalWrite(LED_PIN, LOW);
@@ -78,10 +85,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (strcmp(charMessage, "off") == 0) digitalWrite(FAN_PIN, LOW);
   }
 
-  // Publish device status after changing state
+  // Gửi trạng thái thiết bị sau khi thay đổi
   publishDeviceStatus();
 }
 
+// Hàm kết nối lại MQTT nếu bị ngắt kết nối
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -101,8 +109,8 @@ void reconnect() {
   }
 }
 
+// Hàm setup khởi tạo
 void setup() {
-  // sets the pins as outputs:
   Serial.begin(115200);
   dht.begin();
   pinMode(LED_PIN, OUTPUT);
@@ -113,6 +121,7 @@ void setup() {
   client.setCallback(callback);
 }
 
+// Vòng lặp chính
 void loop() {
   if (!client.connected()) {
     reconnect();
@@ -123,10 +132,12 @@ void loop() {
   if (now - lastMsg > interval) {
     lastMsg = now;
 
+    // Đọc dữ liệu cảm biến
     int humidity = round(dht.readHumidity());
     int temperature = round(dht.readTemperature());
     int light = ceil(analogRead(QUANG_TRO_PIN)/4) + 1;
 
+    // Tạo chuỗi JSON chứa dữ liệu cảm biến
     String payload = "{\"temperature\": ";
     payload += temperature;
     payload += ", \"humidity\": ";
@@ -139,7 +150,7 @@ void loop() {
     // Gửi dữ liệu lên MQTT
     client.publish(mqtt_topic_sensors, payload.c_str());
 
-    // Publish device status
+    // Gửi trạng thái thiết bị
     publishDeviceStatus();
   }
 }
