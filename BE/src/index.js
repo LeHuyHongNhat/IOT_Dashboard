@@ -6,7 +6,7 @@ const router = require("./routes/index.js");
 const dataSensorModel = require("./models/dataSensor.js");
 const scheduleCronJobs = require("./controllers/cron.js");
 const app = express();
-const port = 3001; // port backend
+const port = 3001; // Cổng cho backend
 const cors = require("cors");
 const { Device, Action } = require("@prisma/client");
 const actionHistoryModel = require("./models/actionHistory.js");
@@ -20,6 +20,7 @@ const deviceStates = {
   led: false,
 };
 
+// Cấu hình CORS cho phép truy cập từ frontend
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -27,11 +28,11 @@ app.use(
     optionSuccessStatus: 200,
   })
 );
-app.use(morgan("dev")); //bắn log api gọi đến server
+app.use(morgan("dev")); // Ghi log các yêu cầu API đến server
 
-router(app); // routing của server
+router(app); // Thiết lập routing cho server
 
-scheduleCronJobs();
+scheduleCronJobs(); // Lên lịch các công việc cron
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
@@ -39,8 +40,8 @@ app.listen(port, () => {
 
 // Kết nối đến MQTT broker
 const mqttClient = mqtt.connect(`mqtt://${process.env.HOST_LOCAL}`, {
-  // username: "lehuyhongnhat", // Thêm username
-  // password: "b21dccn575", // Thêm password
+  // username: "lehuyhongnhat", // Thêm username nếu cần
+  // password: "b21dccn575", // Thêm password nếu cần
 });
 
 // Tạo WebSocket server
@@ -94,13 +95,14 @@ wss.on("connection", (ws, req) => {
       }
       deviceAction.action = message == "on" ? Action.ON : Action.OFF;
 
+      // Lưu lịch sử hành động và gửi lệnh đến thiết bị qua MQTT
       await actionHistoryModel.createActionHistory(deviceAction);
       mqttClient.publish(topic, message);
 
       // Cập nhật trạng thái thiết bị
       deviceStates[deviceTopic] = message === "on";
 
-      // Giả lập phản hồi từ hardware sau 1 giây
+      // Giả lập phản hồi từ hardware sau 1.5 giây
       setTimeout(() => {
         const statusTopic = `esp32/deviceStatus/${deviceTopic}`;
         mqttClient.publish(statusTopic, message);
@@ -109,6 +111,7 @@ wss.on("connection", (ws, req) => {
   });
 });
 
+// Các chủ đề MQTT cần subscribe
 const topics = ["esp32/sensors", "esp32/deviceStatus/#"];
 
 mqttClient.on("connect", () => {
@@ -127,6 +130,7 @@ mqttClient.on("message", async (topic, message) => {
       const data = JSON.parse(message.toString());
       const savedData = await dataSensorModel.createDataSensor(data);
 
+      // Gửi dữ liệu cảm biến đến tất cả các client WebSocket
       clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(
@@ -144,6 +148,7 @@ mqttClient.on("message", async (topic, message) => {
       // Cập nhật trạng thái thiết bị
       deviceStates[device] = status === "on";
 
+      // Gửi trạng thái thiết bị đến tất cả các client WebSocket
       clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(

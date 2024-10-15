@@ -2,14 +2,18 @@ const dataSensorModel = require("../models/dataSensor");
 const { PAGE_DEFAULT, PAGE_SIZE_DEFAULT, TIME_ZONE } = require("../constant");
 const { fromZonedTime } = require("date-fns-tz");
 
+// Hàm xử lý yêu cầu POST để tạo dữ liệu cảm biến mới
 async function postDataSensor(req, res) {
   try {
+    // Tạo dữ liệu cảm biến mới
     const newDataSensor = await dataSensorModel.createDataSensor();
+    // Trả về phản hồi thành công
     res.status(200).json({
       message: "Data successfully!",
       data: newDataSensor,
     });
   } catch (error) {
+    // Xử lý lỗi và trả về thông báo lỗi
     res.status(500).json({
       message: "Internal Server Error !",
       error,
@@ -17,20 +21,25 @@ async function postDataSensor(req, res) {
   }
 }
 
+// Hàm xử lý yêu cầu GET để lấy dữ liệu cảm biến
 async function getDataSensors(req, res) {
   try {
+    // Lấy các tham số từ query của request
     let { content, searchBy, page, pageSize, sortBy, orderBy } = req.query;
     let condition = {};
     let order = {};
 
+    // Thiết lập giá trị mặc định cho page và pageSize nếu không có
     page = Math.max(Number(page) || PAGE_DEFAULT, 1);
     pageSize = Math.max(Number(pageSize) || PAGE_SIZE_DEFAULT, 1);
 
+    // Tạo đối tượng phân trang
     const pagination = {
       skip: (page - 1) * pageSize,
       take: pageSize,
     };
 
+    // Xử lý điều kiện tìm kiếm nếu có
     content = content?.trim();
     if (content && searchBy) {
       switch (searchBy) {
@@ -62,6 +71,7 @@ async function getDataSensors(req, res) {
           condition.createdAt = searchDate;
           break;
         case "ALL":
+          // Tìm kiếm theo tất cả các trường
           condition.OR = [
             { id: isNaN(Number(content)) ? undefined : Number(content) },
             {
@@ -77,6 +87,7 @@ async function getDataSensors(req, res) {
           ].filter((c) => Object.values(c)[0] !== undefined);
           break;
         default:
+          // Trả về lỗi nếu searchBy không hợp lệ
           res.status(400).json({
             message:
               "searchBy phải là một trong các tham số sau [ALL,TEMPERATURE,HUMIDITY,LIGHT,ID,TIME]",
@@ -85,6 +96,7 @@ async function getDataSensors(req, res) {
       }
     }
 
+    // Kiểm tra giá trị orderBy
     if (orderBy && orderBy !== "ASC" && orderBy !== "DESC") {
       res.status(400).json({
         message: "orderBy must be one of the following parameters [ASC, DESC]",
@@ -94,6 +106,7 @@ async function getDataSensors(req, res) {
 
     orderBy = orderBy?.toLowerCase() || "asc";
 
+    // Xử lý điều kiện sắp xếp nếu có
     if (sortBy) {
       switch (sortBy) {
         case "ID":
@@ -112,6 +125,7 @@ async function getDataSensors(req, res) {
           order.createdAt = orderBy;
           break;
         default:
+          // Trả về lỗi nếu sortBy không hợp lệ
           res.status(400).json({
             message:
               "sortBy must be one of the following parameters [TIME,TEMPERATURE,HUMIDITY,LIGHT,ID]",
@@ -120,6 +134,7 @@ async function getDataSensors(req, res) {
       }
     } else order.id = orderBy;
 
+    // Thực hiện truy vấn dữ liệu và đếm tổng số bản ghi
     const [data, totalCount] = await Promise.all([
       await dataSensorModel.findDataSensorByContidion(
         condition,
@@ -129,6 +144,7 @@ async function getDataSensors(req, res) {
       await dataSensorModel.countNumberDataSensorByCondition(condition),
     ]);
 
+    // Trả về kết quả dưới dạng JSON
     res.status(200).json({
       data,
       meta: {
@@ -138,6 +154,7 @@ async function getDataSensors(req, res) {
       },
     });
   } catch (error) {
+    // Xử lý lỗi và trả về thông báo lỗi
     res.status(500).json({
       message: "Internal Server Error !",
       error: error.message,
@@ -145,6 +162,7 @@ async function getDataSensors(req, res) {
   }
 }
 
+// Xuất các hàm để sử dụng ở nơi khác
 module.exports = {
   postDataSensor,
   getDataSensors,
