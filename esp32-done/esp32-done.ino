@@ -6,12 +6,14 @@
 // Thông tin kết nối WiFi và MQTT
 const char* ssid = "Px0x";
 const char* password = "11335577";
-const char* mqtt_server = "192.168.0.102";  // Địa chỉ MQTT server
-const int mqtt_port = 1883;
+const char* mqtt_server = "192.168.0.102";
+const int mqtt_port = 1995;
 const char* mqtt_topic_sensors = "esp32/sensors";
 const char* mqtt_topic_led = "esp32/deviceStatus/led";
 const char* mqtt_topic_air_conditioner = "esp32/deviceStatus/air_conditioner";
 const char* mqtt_topic_fan = "esp32/deviceStatus/fan";
+const char* mqtt_username = "lehuyhongnhat";
+const char* mqtt_password = "b21dccn575";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -73,17 +75,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if (strcmp(topic, "action/led") == 0) {
     if (strcmp(charMessage, "on") == 0) digitalWrite(LED_PIN, HIGH);
     if (strcmp(charMessage, "off") == 0) digitalWrite(LED_PIN, LOW);
-  }
+    }
 
   if (strcmp(topic, "action/air_conditioner") == 0) {
     if (strcmp(charMessage, "on") == 0) digitalWrite(AIR_CONDITIONER_PIN, HIGH);
     if (strcmp(charMessage, "off") == 0) digitalWrite(AIR_CONDITIONER_PIN, LOW);
-  }
+    }
 
   if (strcmp(topic, "action/fan") == 0) {
     if (strcmp(charMessage, "on") == 0) digitalWrite(FAN_PIN, HIGH);
     if (strcmp(charMessage, "off") == 0) digitalWrite(FAN_PIN, LOW);
-  }
+    }
 
   // Gửi trạng thái thiết bị sau khi thay đổi
   publishDeviceStatus();
@@ -93,9 +95,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    String clientId = "ESP32";
-    clientId += String(random(0xffff), HEX);
-    if (client.connect(clientId.c_str())) {
+    if (client.connect("ESP32Client", mqtt_username, mqtt_password)) {
       Serial.println("connected");
       client.subscribe("action/led");
       client.subscribe("action/air_conditioner");

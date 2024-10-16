@@ -39,9 +39,9 @@ app.listen(port, () => {
 });
 
 // Kết nối đến MQTT broker
-const mqttClient = mqtt.connect(`mqtt://${process.env.HOST_LOCAL}`, {
-  // username: "lehuyhongnhat", // Thêm username nếu cần
-  // password: "b21dccn575", // Thêm password nếu cần
+const mqttClient = mqtt.connect(`mqtt://${process.env.HOST_LOCAL}:1995`, {
+  username: "lehuyhongnhat", // Thêm username nếu cần
+  password: "b21dccn575", // Thêm password nếu cần
 });
 
 // Tạo WebSocket server
@@ -106,7 +106,7 @@ wss.on("connection", (ws, req) => {
       setTimeout(() => {
         const statusTopic = `esp32/deviceStatus/${deviceTopic}`;
         mqttClient.publish(statusTopic, message);
-      }, 1500);
+      }, 2000);
     }
   });
 });
