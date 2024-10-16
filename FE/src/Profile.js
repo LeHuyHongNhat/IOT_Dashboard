@@ -42,7 +42,7 @@ const Profile = () => {
           <p className="profile-info">
             <FaGithub className="icon" />
             <a
-              href="https://github.com/LeHuyHongNhat"
+              href="https://github.com/LeHuyHongNhat/IOT_Dashboard"
               target="_blank"
               rel="noopener noreferrer"
             >
