@@ -121,13 +121,7 @@ const DataSensorTable = () => {
       <table>
         <thead>
           <tr>
-            <th>
-              ID
-              <span className="sorting-arrows">
-                <span onClick={() => requestSort("id")}>▲</span>
-                <span onClick={() => requestSort("id")}>▼</span>
-              </span>
-            </th>
+            <th>ID</th>
             <th>
               <div className="header-container">
                 <div className="header-text">
