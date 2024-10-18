@@ -13,7 +13,6 @@ const DataSensorTable = () => {
   const [filter, setFilter] = useState({
     content: "",
     searchBy: "ALL",
-    time: "",
   });
 
   // State để lưu trữ thông tin phân trang

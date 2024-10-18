@@ -11,7 +11,7 @@ const ActionHistory = () => {
   // State để lưu trữ các điều kiện lọc
   const [filter, setFilter] = useState({
     searchBy: "ALL",
-    time: "",
+    content: "",
   });
 
   // State để lưu trữ thông tin phân trang và sắp xếp
@@ -70,10 +70,10 @@ const ActionHistory = () => {
           {/* Ô input để nhập thời gian */}
           <input
             type="text"
-            placeholder="Time (hh:mm:ss dd/mm/yyyy)"
-            value={filter.time}
+            placeholder="Time (yyyy-mm-dd HH:mm:ss)"
+            value={filter.content}
             onChange={(e) =>
-              setFilter((prev) => ({ ...prev, time: e.target.value }))
+              setFilter((prev) => ({ ...prev, content: e.target.value }))
             }
             className="search-box"
           />

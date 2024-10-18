@@ -1,13 +1,24 @@
-const { TIME_ZONE } = require("./constant"); // Import hằng số TIME_ZONE từ module constant
+const { TIME_ZONE } = require("./constant");
 
-// Hàm chuyển đổi thời gian UTC sang giờ Việt Nam
-const convertUtcToVnTime = (date) => {
-    return date.toLocaleString("vi-VN", {
-        timeZone: TIME_ZONE, // Sử dụng múi giờ Việt Nam
-    });
-}
+const convertUtcToVnTime = (time) => {
+    const date = new Date(time);
 
-// Xuất hàm để sử dụng ở nơi khác
+    // Chuyển đổi giờ UTC về múi giờ Việt Nam
+    const vnTime = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+
+    const year = vnTime.getFullYear();
+    const month = String(vnTime.getMonth() + 1).padStart(2, '0'); // getMonth() trả về giá trị từ 0 đến 11
+    const day = String(vnTime.getDate()).padStart(2, '0');
+    const hours = String(vnTime.getHours()).padStart(2, '0');
+    const minutes = String(vnTime.getMinutes()).padStart(2, '0');
+    const seconds = String(vnTime.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 module.exports = {
     convertUtcToVnTime
 }
+
+
+

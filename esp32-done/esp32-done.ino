@@ -3,35 +3,44 @@
 #include <DHT.h>
 #include <math.h>
 
-// Thông tin kết nối WiFi và MQTT
-const char* ssid = "Px0x";
-const char* password = "11335577";
-const char* mqtt_server = "192.168.0.102";
-const int mqtt_port = 1995;
-const char* mqtt_topic_sensors = "esp32/sensors";
-const char* mqtt_topic_led = "esp32/deviceStatus/led";
-const char* mqtt_topic_air_conditioner = "esp32/deviceStatus/air_conditioner";
-const char* mqtt_topic_fan = "esp32/deviceStatus/fan";
-const char* mqtt_username = "lehuyhongnhat";
-const char* mqtt_password = "b21dccn575";
+const char* ssid = "Truong Giang T5";
+const char* password = "00000005";
+const char* mqtt_server = "192.168.55.31";
+
+unsigned long previousMillis = 0; // Thời gian lưu trữ lần nhấp nháy cuối cùng
+const long blinkInterval = 500; 
+
+
+bool isWarning = false;
+const int mqtt_port = 1883;
+const char* mqtt_topic = "esp32/sensors";
+
+
+bool currentLedStatus = false;
+bool ledStatus = false;
+
+bool currentAirConditionerStatus = false;
+bool airConditionerStatus = false;
+
+bool currentFanStatus = false;
+bool fanStatus = false;
+
+bool currentLampStatus = false;
+bool lampStatus = false;
+
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// Định nghĩa các chân kết nối
 #define DHT_PIN 13
 #define QUANG_TRO_PIN 34
 #define DHTTYPE DHT11
 #define LED_PIN 25
 #define AIR_CONDITIONER_PIN 26
 #define FAN_PIN 27
+#define LAMP_PIN 32
 
 DHT dht(DHT_PIN, DHTTYPE);
-
-unsigned long lastMsg = 0;
-const long interval = 2000;  // Khoảng thời gian giữa các lần gửi dữ liệu cảm biến
-
-// Hàm kết nối WiFi
 void setup_wifi() {
   Serial.println();
   Serial.print("Connecting to ");
@@ -50,14 +59,10 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-// Hàm gửi trạng thái thiết bị lên MQTT
-void publishDeviceStatus() {
-  client.publish(mqtt_topic_led, digitalRead(LED_PIN) == HIGH ? "on" : "off");
-  client.publish(mqtt_topic_air_conditioner, digitalRead(AIR_CONDITIONER_PIN) == HIGH ? "on" : "off");
-  client.publish(mqtt_topic_fan, digitalRead(FAN_PIN) == HIGH ? "on" : "off");
-}
+// bool lampBlinking = false;  
 
-// Hàm callback xử lý khi nhận được tin nhắn từ MQTT
+
+
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -71,35 +76,62 @@ void callback(char* topic, byte* payload, unsigned int length) {
   char charMessage[length + 1];
   message.toCharArray(charMessage, length + 1);
 
-  // Xử lý tin nhắn điều khiển thiết bị
   if (strcmp(topic, "action/led") == 0) {
-    if (strcmp(charMessage, "on") == 0) digitalWrite(LED_PIN, HIGH);
-    if (strcmp(charMessage, "off") == 0) digitalWrite(LED_PIN, LOW);
+    if (strcmp(charMessage, "on") == 0) {
+      digitalWrite(LED_PIN, HIGH);
+      ledStatus = true;
+    } 
+    if (strcmp(charMessage, "off") == 0) {
+      digitalWrite(LED_PIN, LOW);
+      ledStatus = false;
     }
+  }
 
-  if (strcmp(topic, "action/air_conditioner") == 0) {
-    if (strcmp(charMessage, "on") == 0) digitalWrite(AIR_CONDITIONER_PIN, HIGH);
-    if (strcmp(charMessage, "off") == 0) digitalWrite(AIR_CONDITIONER_PIN, LOW);
+  else if (strcmp(topic, "action/airConditioner") == 0) {
+    if (strcmp(charMessage, "on") == 0) {
+      digitalWrite(AIR_CONDITIONER_PIN, HIGH);
+      airConditionerStatus = true;
+    } 
+    if (strcmp(charMessage, "off") == 0) {
+      digitalWrite(AIR_CONDITIONER_PIN, LOW);
+      airConditionerStatus = false;
     }
+  }
 
-  if (strcmp(topic, "action/fan") == 0) {
-    if (strcmp(charMessage, "on") == 0) digitalWrite(FAN_PIN, HIGH);
-    if (strcmp(charMessage, "off") == 0) digitalWrite(FAN_PIN, LOW);
+  else if (strcmp(topic, "action/fan") == 0) {
+    if (strcmp(charMessage, "on") == 0) {
+      digitalWrite(FAN_PIN, HIGH);
+      fanStatus = true;
+    } 
+    if (strcmp(charMessage, "off") == 0) {
+      digitalWrite(FAN_PIN, LOW);
+      fanStatus = false;
     }
-
-  // Gửi trạng thái thiết bị sau khi thay đổi
-  publishDeviceStatus();
+  }
+  else if (strcmp(topic, "action/lamp") == 0) {
+    if (strcmp(charMessage, "on") == 0) {
+      digitalWrite(LAMP_PIN, HIGH);
+      lampStatus = true;
+    }
+    if (strcmp(charMessage, "off") == 0)
+    {
+      digitalWrite(LAMP_PIN, LOW);
+      lampStatus = false;
+    } 
+  }
 }
 
-// Hàm kết nối lại MQTT nếu bị ngắt kết nối
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    if (client.connect("ESP32Client", mqtt_username, mqtt_password)) {
+    String clientId = "ESP32";
+    clientId += String(random(0xffff), HEX);
+    if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       client.subscribe("action/led");
-      client.subscribe("action/air_conditioner");
+      client.subscribe("action/airConditioner");
       client.subscribe("action/fan");
+      client.subscribe("action/lamp");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -109,48 +141,114 @@ void reconnect() {
   }
 }
 
-// Hàm setup khởi tạo
 void setup() {
+  // sets the pins as outputs:
   Serial.begin(115200);
   dht.begin();
   pinMode(LED_PIN, OUTPUT);
   pinMode(AIR_CONDITIONER_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
+  pinMode(LAMP_PIN, OUTPUT);
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
 }
 
-// Vòng lặp chính
+void checkAndUpdateState() {
+  // Kiểm tra và cập nhật trạng thái đèn LED
+  if (ledStatus != currentLedStatus) {
+    String state = ledStatus ? "on" : "off";
+    client.publish("ledOk", state.c_str());
+    Serial.print("LED status: ");
+    Serial.println(state);
+    currentLedStatus = ledStatus;
+  }
+
+  // Kiểm tra và cập nhật trạng thái điều hòa
+  if (airConditionerStatus != currentAirConditionerStatus) {
+    String state = airConditionerStatus ? "on" : "off";
+    client.publish("airConditionerOk", state.c_str());
+    Serial.print("Air conditioner status: ");
+    Serial.println(state);
+    currentAirConditionerStatus = airConditionerStatus;
+  }
+
+  // Kiểm tra và cập nhật trạng thái quạt
+  if (fanStatus != currentFanStatus) {
+    String state = fanStatus ? "on" : "off";
+    client.publish("fanOk", state.c_str());
+    Serial.print("Fan status: ");
+    Serial.println(state);
+    currentFanStatus = fanStatus;
+  }
+
+    if (lampStatus != currentLampStatus) {
+    String state = lampStatus ? "on" : "off";
+    client.publish("lampOk", state.c_str());
+    Serial.print("Lamp status: ");
+    Serial.println(state);
+    currentLampStatus = lampStatus;
+  }
+}
+
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  client.loop();
 
-  unsigned long now = millis();
-  if (now - lastMsg > interval) {
-    lastMsg = now;
+  int humidity = round(dht.readHumidity());
+  int temperature = round(dht.readTemperature());
+  int light = ceil(analogRead(QUANG_TRO_PIN)/4) + 1;
 
-    // Đọc dữ liệu cảm biến
-    int humidity = round(dht.readHumidity());
-    int temperature = round(dht.readTemperature());
-    int light = ceil(analogRead(QUANG_TRO_PIN)/4) + 1;
+   int gas = random(0, 1000);
 
-    // Tạo chuỗi JSON chứa dữ liệu cảm biến
-    String payload = "{\"temperature\": ";
-    payload += temperature;
-    payload += ", \"humidity\": ";
-    payload += humidity;
-    payload += ", \"light\": ";
-    payload += light;
-    payload += "}";
-    Serial.println(payload);
+    unsigned long currentMillis = millis();
+  if (gas > 800) {
+      isWarning = true;  
+      digitalWrite(LAMP_PIN,  HIGH );
+      delay(200);
+      digitalWrite(LAMP_PIN,  LOW);
+      delay(200);
+       digitalWrite(LAMP_PIN,  HIGH );
+      delay(200);
+      digitalWrite(LAMP_PIN,  LOW);
+      delay(200);
+       digitalWrite(LAMP_PIN,  HIGH );
+      delay(200);
+      digitalWrite(LAMP_PIN,  LOW);
+      delay(200);
+      digitalWrite(LAMP_PIN,  HIGH );
+      delay(200);
+      digitalWrite(LAMP_PIN,  LOW);
+      delay(200);
+      digitalWrite(LAMP_PIN,  HIGH );
+      delay(200);
+      digitalWrite(LAMP_PIN,  LOW);
+      delay(200);
+      client.publish("warning", "on");
+  } else {
+    // Tắt đèn nếu gas trở về mức an toàn
+    digitalWrite(LAMP_PIN, LOW);
+    isWarning = false;
+      client.publish("warning", "off");
 
-    // Gửi dữ liệu lên MQTT
-    client.publish(mqtt_topic_sensors, payload.c_str());
-
-    // Gửi trạng thái thiết bị
-    publishDeviceStatus();
   }
+
+ String payload = "{\"temperature\": ";
+  payload += temperature;
+  payload += ", \"humidity\": ";
+  payload += humidity;
+  payload += ", \"light\": ";
+  payload += light;
+  payload += ", \"gas\": ";
+  payload += gas;
+  payload += "}";
+  Serial.println( payload);
+
+  // Gửi dữ liệu lên MQTT
+  client.publish(mqtt_topic, payload.c_str());
+
+  client.loop();
+  checkAndUpdateState();
+  delay(2000);
 }
