@@ -9,9 +9,10 @@ const actionHistoryModel = require('./models/actionHistory.js');
 const app = express();
 const port = 3001; // port backend
 const cors = require('cors');
+const { swaggerUi, specs } = require('../swagger.js');
 
 require('dotenv').config();
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use(
   cors({
     origin: 'http://localhost:3000',

@@ -60,6 +60,7 @@ async function countData(req, res) {
   }
 }
 
+
 async function getDataSensors(req, res) {
   try {
     let { content, searchBy, startTime, endTime, page, pageSize, sortBy, orderBy } = req.query;
