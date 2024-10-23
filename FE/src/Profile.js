@@ -52,7 +52,11 @@ const Profile = () => {
           {/* Liên kết để tải PDF (chưa có) */}
           <p className="profile-info">
             <FaFilePdf className="icon" />
-            <a href="pdf_tam_chua_co" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://github.com/LeHuyHongNhat/IOT_Dashboard/blob/master/T%C3%A0i%20li%E1%BB%87u%20PDF.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Download PDF
             </a>
           </p>
