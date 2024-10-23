@@ -3,16 +3,18 @@
 #include <DHT.h>
 #include <math.h>
 
-const char* ssid = "Truong Giang T5";
-const char* password = "00000005";
-const char* mqtt_server = "192.168.55.31";
+const char* ssid = "Icloud<3";
+const char* password = "123456789v";
+const char* mqtt_server = "172.20.10.6";
+const char* mqtt_username = "lehuyhongnhat";
+const char* mqtt_password = "b21dccn575";
 
 unsigned long previousMillis = 0; // Thời gian lưu trữ lần nhấp nháy cuối cùng
 const long blinkInterval = 500; 
 
 
 bool isWarning = false;
-const int mqtt_port = 1883;
+const int mqtt_port = 1995;
 const char* mqtt_topic = "esp32/sensors";
 
 
@@ -126,7 +128,7 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...");
     String clientId = "ESP32";
     clientId += String(random(0xffff), HEX);
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("connected");
       client.subscribe("action/led");
       client.subscribe("action/airConditioner");
