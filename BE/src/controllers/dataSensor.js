@@ -1,169 +1,123 @@
-const dataSensorModel = require("../models/dataSensor");
-const { PAGE_DEFAULT, PAGE_SIZE_DEFAULT, TIME_ZONE } = require("../constant");
-const { fromZonedTime } = require("date-fns-tz");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-// Hàm xử lý yêu cầu POST để tạo dữ liệu cảm biến mới
-async function postDataSensor(req, res) {
+// Lấy tất cả dữ liệu cảm biến
+const getDataSensors = async (req, res) => {
   try {
-    // Tạo dữ liệu cảm biến mới
-    const newDataSensor = await dataSensorModel.createDataSensor();
-    // Trả về phản hồi thành công
-    res.status(200).json({
-      message: "Data successfully!",
-      data: newDataSensor,
-    });
-  } catch (error) {
-    // Xử lý lỗi và trả về thông báo lỗi
-    res.status(500).json({
-      message: "Internal Server Error !",
-      error,
-    });
-  }
-}
+    const {
+      page = 1,
+      pageSize = 10,
+      sortBy = "id",
+      orderBy = "desc",
+      searchBy = "ALL",
+      content = "",
+    } = req.query;
 
-// Hàm xử lý yêu cầu GET để lấy dữ liệu cảm biến
-async function getDataSensors(req, res) {
-  try {
-    // Lấy các tham số từ query của request
-    let { content, searchBy, page, pageSize, sortBy, orderBy } = req.query;
-    let condition = {};
-    let order = {};
+    const skip = (page - 1) * pageSize;
 
-    // Thiết lập giá trị mặc định cho page và pageSize nếu không có
-    page = Math.max(Number(page) || PAGE_DEFAULT, 1);
-    pageSize = Math.max(Number(pageSize) || PAGE_SIZE_DEFAULT, 1);
-
-    // Tạo đối tượng phân trang
-    const pagination = {
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    };
-
-    // Xử lý điều kiện tìm kiếm nếu có
-    content = content?.trim();
-    if (content && searchBy) {
-      switch (searchBy) {
-        case "ID":
-          condition.id = Number(content);
-          break;
-        case "TEMPERATURE":
-          condition.temperature = Number(content);
-          break;
-        case "HUMIDITY":
-          condition.humidity = Number(content);
-          break;
-        case "LIGHT":
-          condition.light = Number(content);
-          break;
-        case "TIME":
-          // Chuyển đổi định dạng thời gian từ "hh:mm:ss dd/mm/yyyy" sang Date object
-          const [time, date] = content.split(" ");
-          const [hours, minutes, seconds] = time.split(":");
-          const [day, month, year] = date.split("/");
-          const searchDate = new Date(
-            year,
-            month - 1,
-            day,
-            hours,
-            minutes,
-            seconds
-          );
-          condition.createdAt = searchDate;
-          break;
-        case "ALL":
-          // Tìm kiếm theo tất cả các trường
-          condition.OR = [
-            { id: isNaN(Number(content)) ? undefined : Number(content) },
-            {
-              temperature: isNaN(Number(content)) ? undefined : Number(content),
-            },
-            { humidity: isNaN(Number(content)) ? undefined : Number(content) },
-            { light: isNaN(Number(content)) ? undefined : Number(content) },
-            {
-              createdAt: {
-                equals: new Date(content),
-              },
-            },
-          ].filter((c) => Object.values(c)[0] !== undefined);
-          break;
-        default:
-          // Trả về lỗi nếu searchBy không hợp lệ
-          res.status(400).json({
-            message:
-              "searchBy phải là một trong các tham số sau [ALL,TEMPERATURE,HUMIDITY,LIGHT,ID,TIME]",
-          });
-          return;
+    // Build the where clause based on search parameters
+    let where = {};
+    if (content && searchBy !== "ALL") {
+      if (searchBy === "TIME") {
+        where.createdAt = {
+          contains: content,
+        };
+      } else {
+        const field = searchBy.toLowerCase();
+        where[field] = {
+          equals: isNaN(content) ? content : Number(content),
+        };
       }
     }
 
-    // Kiểm tra giá trị orderBy
-    if (orderBy && orderBy !== "ASC" && orderBy !== "DESC") {
-      res.status(400).json({
-        message: "orderBy must be one of the following parameters [ASC, DESC]",
-      });
-      return;
-    }
-
-    orderBy = orderBy?.toLowerCase() || "asc";
-
-    // Xử lý điều kiện sắp xếp nếu có
-    if (sortBy) {
-      switch (sortBy) {
-        case "ID":
-          order.id = orderBy;
-          break;
-        case "TEMPERATURE":
-          order.temperature = orderBy;
-          break;
-        case "HUMIDITY":
-          order.humidity = orderBy;
-          break;
-        case "LIGHT":
-          order.light = orderBy;
-          break;
-        case "TIME":
-          order.createdAt = orderBy;
-          break;
-        default:
-          // Trả về lỗi nếu sortBy không hợp lệ
-          res.status(400).json({
-            message:
-              "sortBy must be one of the following parameters [TIME,TEMPERATURE,HUMIDITY,LIGHT,ID]",
-          });
-          break;
-      }
-    } else order.id = orderBy;
-
-    // Thực hiện truy vấn dữ liệu và đếm tổng số bản ghi
     const [data, totalCount] = await Promise.all([
-      await dataSensorModel.findDataSensorByContidion(
-        condition,
-        pagination,
-        order
-      ),
-      await dataSensorModel.countNumberDataSensorByCondition(condition),
+      prisma.sensorData.findMany({
+        where,
+        take: parseInt(pageSize),
+        skip: parseInt(skip),
+        orderBy: sortBy ? { [sortBy]: orderBy.toLowerCase() } : { id: "desc" },
+      }),
+      prisma.sensorData.count({ where }),
     ]);
 
-    // Trả về kết quả dưới dạng JSON
-    res.status(200).json({
-      data,
+    res.json({
+      success: true,
+      data: data,
       meta: {
-        page,
-        pageSize,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
         totalCount,
       },
     });
   } catch (error) {
-    // Xử lý lỗi và trả về thông báo lỗi
+    console.error("Error in getDataSensors:", error);
     res.status(500).json({
-      message: "Internal Server Error !",
+      success: false,
+      message: "Error getting sensor data!",
       error: error.message,
     });
   }
-}
+};
 
-// Xuất các hàm để sử dụng ở nơi khác
+// Tạo dữ liệu cảm biến mới
+const createDataSensor = async (data) => {
+  try {
+    const sensorData = await prisma.sensorData.create({
+      data: {
+        temperature: data.temperature,
+        humidity: data.humidity,
+        light: data.light,
+        gas: data.gas || 0,
+      },
+    });
+
+    // Lưu cảnh báo nếu gas > 70
+    if (data.gas > 70) {
+      await prisma.gasWarning.create({
+        data: {
+          gasValue: data.gas,
+          createdAt: new Date(),
+        },
+      });
+      console.log("Gas warning recorded:", data.gas);
+    }
+
+    return sensorData;
+  } catch (error) {
+    console.error("Error creating sensor data:", error);
+    throw error;
+  }
+};
+
+// Thêm hàm đếm số lần gas > 70 trong ngày
+const getGasWarningCount = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const count = await prisma.sensor_data.count({
+      where: {
+        AND: [{ gas: { gt: 70 } }, { createdAt: { gte: today } }],
+      },
+    });
+
+    // Đảm bảo trả về JSON
+    res.json({
+      success: true,
+      count: count,
+    });
+  } catch (error) {
+    console.error("Error counting gas warnings:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error counting gas warnings",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
-  postDataSensor,
   getDataSensors,
+  createDataSensor,
+  getGasWarningCount,
 };

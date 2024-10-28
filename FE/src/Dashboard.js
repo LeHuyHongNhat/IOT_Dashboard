@@ -18,6 +18,7 @@ const Dashboard = () => {
     temperature: 0,
     humidity: 0,
     light: 0,
+    gas: 0,
   });
 
   const [dataStore, setDataStore] = useState(() => {
@@ -42,6 +43,9 @@ const Dashboard = () => {
           led: { status: false, loading: false },
         };
   });
+
+  // Khai báo state cho cảnh báo gas
+  const [isGasWarning, setIsGasWarning] = useState(false);
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -129,56 +133,89 @@ const Dashboard = () => {
   );
 
   useEffect(() => {
-    const newSocket = new WebSocket("ws://localhost:8080");
-    setSocket(newSocket);
+    const connectWebSocket = () => {
+      const newSocket = new WebSocket("ws://localhost:8080");
 
-    newSocket.onopen = () => {
-      console.log("WebSocket connected");
-      // Khi kết nối lại, gửi yêu cầu cập nhật trạng thái thiết bị
-      newSocket.send(JSON.stringify({ topic: "getDeviceStatus" }));
+      newSocket.onopen = () => {
+        console.log("WebSocket connected");
+        newSocket.send(JSON.stringify({ topic: "getDeviceStatus" }));
+      };
+
+      newSocket.onclose = () => {
+        console.log("WebSocket disconnected");
+        // Thử kết nối lại sau 5 giây
+        setTimeout(connectWebSocket, 5000);
+      };
+
+      newSocket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      // Thêm xử lý message đã sửa ở trên
+      newSocket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log("Received WebSocket message:", message);
+
+          // Kiểm tra cấu trúc message
+          if (!message.topic) {
+            console.error("Invalid message format:", message);
+            return;
+          }
+
+          if (message.topic === "esp32/sensors") {
+            // Cập nhật dữ liệu sensor
+            const sensorData = message.data;
+            setData(sensorData);
+
+            // Cập nhật trạng thái cảnh báo gas
+            setIsGasWarning(sensorData.gas > 70);
+
+            setDataStore((prev) => {
+              const newDataStore = {
+                temperatures: [
+                  ...prev.temperatures,
+                  sensorData.temperature,
+                ].slice(-MAX_DATA_POINTS),
+                humiditys: [...prev.humiditys, sensorData.humidity].slice(
+                  -MAX_DATA_POINTS
+                ),
+                lights: [...prev.lights, sensorData.light].slice(
+                  -MAX_DATA_POINTS
+                ),
+                times: [...prev.times, new Date().toLocaleTimeString()].slice(
+                  -MAX_DATA_POINTS
+                ),
+              };
+              localStorage.setItem("chartData", JSON.stringify(newDataStore));
+              return newDataStore;
+            });
+          } else if (message.topic.startsWith("deviceStatus/")) {
+            // Cập nhật trạng thái thiết bị
+            const device = message.topic.split("/")[1];
+            const status = message.data === "on";
+            setDeviceStates((prev) => {
+              const newStates = {
+                ...prev,
+                [device]: { status, loading: false },
+              };
+              localStorage.setItem("deviceStates", JSON.stringify(newStates));
+              return newStates;
+            });
+          }
+        } catch (error) {
+          console.error("Error processing WebSocket message:", error);
+        }
+      };
+
+      setSocket(newSocket);
+
+      return () => {
+        newSocket.close();
+      };
     };
 
-    newSocket.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
-
-    newSocket.onmessage = (event) => {
-      const { topic, data } = JSON.parse(event.data);
-      if (topic === "sensorData") {
-        setData(data);
-        setDataStore((prev) => {
-          const newDataStore = {
-            temperatures: [...prev.temperatures, data.temperature].slice(
-              -MAX_DATA_POINTS
-            ),
-            humiditys: [...prev.humiditys, data.humidity].slice(
-              -MAX_DATA_POINTS
-            ),
-            lights: [...prev.lights, data.light].slice(-MAX_DATA_POINTS),
-            times: [...prev.times, new Date().toLocaleTimeString()].slice(
-              -MAX_DATA_POINTS
-            ),
-          };
-          localStorage.setItem("chartData", JSON.stringify(newDataStore));
-          return newDataStore;
-        });
-      } else if (topic.startsWith("deviceStatus/")) {
-        const device = topic.split("/")[1];
-        const status = data === "on";
-        setDeviceStates((prev) => {
-          const newStates = {
-            ...prev,
-            [device]: { status, loading: false },
-          };
-          localStorage.setItem("deviceStates", JSON.stringify(newStates));
-          return newStates;
-        });
-      }
-    };
-
-    return () => {
-      newSocket.close();
-    };
+    connectWebSocket();
   }, []);
 
   const getBackgroundColor = (value, max, color) => {
@@ -186,8 +223,21 @@ const Dashboard = () => {
     return `rgba(${color}, ${intensity})`;
   };
 
+  const GasWarning = ({ isWarning }) => {
+    return (
+      <div className={`gas-warning-box ${isWarning ? "warning-active" : ""}`}>
+        <span className="warning-icon">⚠️</span>
+        <span className="warning-text">GAS WARNING!</span>
+        {isWarning && <span className="gas-value">Gas Level: {data.gas}</span>}
+      </div>
+    );
+  };
+
   return (
-    <div className="dashboard-container">
+    <div className="dashboard">
+      {/* Thêm GasWarning vào đầu dashboard */}
+      <GasWarning isWarning={isGasWarning} />
+
       <h2>Dashboard</h2>
 
       <table className="centered-table">

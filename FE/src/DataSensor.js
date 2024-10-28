@@ -32,16 +32,25 @@ const DataSensorTable = () => {
 
   // Hàm để lấy dữ liệu cảm biến từ server
   const getActionHistory = async () => {
-    const queryString = createQueryString(filter, page);
-    const sensorDatas = await axiosClient.get(`/table/data${queryString}`);
-    setData(mappingDataSensor(sensorDatas.data));
-    setTotalPage(Math.ceil(sensorDatas.meta.totalCount / page.pageSize));
+    try {
+      const queryString = createQueryString(filter, {
+        ...page,
+        sortBy: "id", // Mặc định sắp xếp theo ID
+        orderBy: "desc", // Sắp xếp giảm dần (mới nhất lên đầu)
+      });
+
+      const sensorDatas = await axiosClient.get(`/table/data${queryString}`);
+      setData(mappingDataSensor(sensorDatas.data));
+      setTotalPage(Math.ceil(sensorDatas.meta.totalCount / page.pageSize));
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   // Gọi API mỗi khi thông tin phân trang thay đổi
   useEffect(() => {
     getActionHistory();
-  }, [page]);
+  }, [page, sortConfig]);
 
   // Hàm xử lý khi thay đổi trang
   const handlePageChange = (newPage) => {
@@ -55,28 +64,30 @@ const DataSensorTable = () => {
 
   // Hàm xử lý sắp xếp dữ liệu
   const requestSort = (key) => {
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
+    let direction = "desc"; // Mặc định sắp xếp giảm dần
+    if (sortConfig.key === key && sortConfig.direction === "desc") {
+      direction = "asc";
+    } else if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = null;
       key = null;
     }
+
     setSortConfig({ key, direction });
-    data.sort((a, b) => {
-      if (a[key] < b[key]) {
-        return direction === "ascending" ? -1 : 1;
-      }
-      if (a[key] > b[key]) {
-        return direction === "ascending" ? 1 : -1;
-      }
-      return 0;
-    });
-    setData(data);
+    setPage((prev) => ({
+      ...prev,
+      sortBy: key,
+      orderBy: direction,
+    }));
   };
+
+  // Thêm useEffect để tự động sắp xếp khi component mount
+  useEffect(() => {
+    setPage((prev) => ({
+      ...prev,
+      sortBy: "id",
+      orderBy: "desc",
+    }));
+  }, []);
 
   return (
     <div className="container">
@@ -111,6 +122,7 @@ const DataSensorTable = () => {
             <option value="TEMPERATURE">Nhiệt độ</option>
             <option value="HUMIDITY">Độ ẩm</option>
             <option value="LIGHT">Ánh sáng</option>
+            <option value="GAS">Gas</option>
             <option value="TIME">Thời gian</option>
           </select>
           <button onClick={() => getActionHistory()}>Search</button>
@@ -121,14 +133,43 @@ const DataSensorTable = () => {
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            <th>
+              <div className="header-container">
+                <div className="header-text">
+                  ID
+                  <span className="sorting-arrows">
+                    <span
+                      onClick={() => requestSort("id")}
+                      className={
+                        sortConfig.key === "id"
+                          ? sortConfig.direction === "desc"
+                            ? "active desc"
+                            : "active asc"
+                          : ""
+                      }
+                    >
+                      {sortConfig.key === "id"
+                        ? sortConfig.direction === "desc"
+                          ? "▼"
+                          : "▲"
+                        : "▼▲"}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </th>
             <th>
               <div className="header-container">
                 <div className="header-text">
                   Temperature (°C)
                   <span className="sorting-arrows">
-                    <span onClick={() => requestSort("temperature")}>▲</span>
-                    <span onClick={() => requestSort("temperature")}>▼</span>
+                    <span onClick={() => requestSort("temperature")}>
+                      {sortConfig.key === "temperature"
+                        ? sortConfig.direction === "desc"
+                          ? "▼"
+                          : "▲"
+                        : "▼▲"}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -138,8 +179,13 @@ const DataSensorTable = () => {
                 <div className="header-text">
                   Humidity (%)
                   <span className="sorting-arrows">
-                    <span onClick={() => requestSort("humidity")}>▲</span>
-                    <span onClick={() => requestSort("humidity")}>▼</span>
+                    <span onClick={() => requestSort("humidity")}>
+                      {sortConfig.key === "humidity"
+                        ? sortConfig.direction === "desc"
+                          ? "▼"
+                          : "▲"
+                        : "▼▲"}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -149,8 +195,29 @@ const DataSensorTable = () => {
                 <div className="header-text">
                   Light (nits)
                   <span className="sorting-arrows">
-                    <span onClick={() => requestSort("light")}>▲</span>
-                    <span onClick={() => requestSort("light")}>▼</span>
+                    <span onClick={() => requestSort("light")}>
+                      {sortConfig.key === "light"
+                        ? sortConfig.direction === "desc"
+                          ? "▼"
+                          : "▲"
+                        : "▼▲"}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </th>
+            <th>
+              <div className="header-container">
+                <div className="header-text">
+                  Gas
+                  <span className="sorting-arrows">
+                    <span onClick={() => requestSort("gas")}>
+                      {sortConfig.key === "gas"
+                        ? sortConfig.direction === "desc"
+                          ? "▼"
+                          : "▲"
+                        : "▼▲"}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -160,8 +227,13 @@ const DataSensorTable = () => {
                 <div className="header-text">
                   Time
                   <span className="sorting-arrows">
-                    <span onClick={() => requestSort("time")}>▲</span>
-                    <span onClick={() => requestSort("time")}>▼</span>
+                    <span onClick={() => requestSort("time")}>
+                      {sortConfig.key === "time"
+                        ? sortConfig.direction === "desc"
+                          ? "▼"
+                          : "▲"
+                        : "▼▲"}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -175,12 +247,15 @@ const DataSensorTable = () => {
               <td>{row.temperature}</td>
               <td>{row.humidity}</td>
               <td>{row.light}</td>
+              <td className={row.gas > 70 ? "gas-warning" : ""}>
+                {row.gas}
+                {row.gas > 70 && <span className="warning-icon">⚠️</span>}
+              </td>
               <td>{row.time.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>
       </table>
-
       {/* Phần phân trang */}
       <div className="pagination-wrapper">
         <div className="pagination">

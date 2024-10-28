@@ -51,6 +51,9 @@ const Menu = () => {
                   Lịch sử bật tắt
                 </button>
               </Link>
+              <Link to="/gas" className="linkmenu">
+                <button className="ulLink bi bi-cloud-haze">Gas Monitor</button>
+              </Link>
             </ul>
           </div>
         </div>

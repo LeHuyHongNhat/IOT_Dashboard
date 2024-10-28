@@ -13,6 +13,7 @@ model SensorData {
   temperature Int
   humidity    Int
   light       Int
+  gas         Int      @default(0)
   createdAt   DateTime @default(now())
 
   @@map("sensor_data")
@@ -27,10 +28,17 @@ model ActionHistory {
   @@map("action_history")
 }
 
+model GasWarning {
+  id        Int      @id @default(autoincrement())
+  gasValue  Float
+  createdAt DateTime @default(now())
+}
+
 enum Device {
   LED
   FAN
   AIR_CONDITIONER
+  GAS_WARNING
 }
 
 enum Action {

@@ -1,3 +1,15 @@
-const { PrismaClient } = require("@prisma/client"); // Import PrismaClient từ thư viện @prisma/client
-const prisma = new PrismaClient(); // Tạo một instance của PrismaClient để kết nối với cơ sở dữ liệu
-module.exports = prisma; // Xuất instance này để sử dụng ở các phần khác của ứng dụng
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient({
+  log: [
+    { level: "warn", emit: "event" },
+    { level: "error", emit: "event" },
+  ],
+});
+
+prisma
+  .$connect()
+  .then(() => console.log("Database connected"))
+  .catch((error) => console.error("Database connection error:", error));
+
+module.exports = prisma;
