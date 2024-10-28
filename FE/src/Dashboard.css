@@ -127,3 +127,75 @@ input:checked + .slider:before {
     opacity: 1;
   }
 }
+
+/* Thêm vào cuối file */
+.gas-warning-box {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.gas-warning-box.warning-active {
+  opacity: 1;
+  visibility: visible;
+  animation: warningBlink 1s infinite;
+}
+
+.warning-icon {
+  font-size: 24px;
+}
+
+.warning-text {
+  font-weight: bold;
+  color: #ff4444;
+  font-size: 18px;
+}
+
+.gas-value {
+  color: #666;
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+@keyframes warningBlink {
+  0% {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    background-color: #ffebee;
+    box-shadow: 0 2px 20px rgba(255, 68, 68, 0.3);
+  }
+  100% {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Thêm media query cho responsive */
+@media (max-width: 768px) {
+  .gas-warning-box {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    padding: 10px;
+  }
+
+  .warning-text {
+    font-size: 16px;
+  }
+
+  .warning-icon {
+    font-size: 20px;
+  }
+}

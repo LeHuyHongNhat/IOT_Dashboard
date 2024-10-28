@@ -14,16 +14,15 @@ export const createQueryString = (filter, page) => {
 };
 
 // Hàm chuyển đổi dữ liệu cảm biến
-export const mappingDataSensor = (datas) => {
-  return datas.map((data) => {
-    return {
-      id: data.id,
-      temperature: data.temperature,
-      humidity: data.humidity,
-      light: data.light,
-      time: convertUtcToVnTime(data.createdAt), // Chuyển đổi thời gian UTC sang giờ Việt Nam
-    };
-  });
+export const mappingDataSensor = (data) => {
+  return data.map((item) => ({
+    id: item.id,
+    temperature: item.temperature,
+    humidity: item.humidity,
+    light: item.light,
+    gas: item.gas,
+    time: new Date(item.createdAt),
+  }));
 };
 
 // Hàm chuyển đổi dữ liệu lịch sử hành động

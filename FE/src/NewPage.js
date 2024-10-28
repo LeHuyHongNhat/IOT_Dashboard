@@ -52,6 +52,30 @@ const NewPage = () => {
         };
   });
 
+  // Thêm hàm sendMessage
+  const sendMessage = useCallback(
+    (device, action) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        setDeviceStates((prev) => {
+          const newStates = {
+            ...prev,
+            [device]: { ...prev[device], loading: true },
+          };
+          localStorage.setItem("gasDeviceStates", JSON.stringify(newStates));
+          return newStates;
+        });
+        socket.send(
+          JSON.stringify({
+            topic: `action/${device}`,
+            message: action,
+          })
+        );
+      }
+    },
+    [socket]
+  );
+
+  // Hàm lấy số lần cảnh báo từ BE
   const fetchWarningCount = async () => {
     try {
       // Log trước khi gọi API
@@ -75,91 +99,67 @@ const NewPage = () => {
     }
   };
 
-  // Thêm hàm sendMessage
-  const sendMessage = useCallback(
-    (device, action) => {
-      if (socket) {
-        const message = {
-          topic: "control",
-          device: device,
-          action: action,
-        };
-
-        // Cập nhật trạng thái loading
-        setDeviceStates((prev) => ({
-          ...prev,
-          [device]: {
-            ...prev[device],
-            loading: true,
-          },
-        }));
-
-        socket.send(JSON.stringify(message));
-      }
-    },
-    [socket]
-  );
-
+  // WebSocket setup
   useEffect(() => {
-    // Khởi tạo WebSocket connection
-    const ws = new WebSocket("ws://localhost:3001");
+    const newSocket = new WebSocket("ws://localhost:8080");
+    setSocket(newSocket);
 
-    ws.onopen = () => {
-      console.log("Connected to WebSocket");
-      setSocket(ws);
+    newSocket.onmessage = async (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.topic === "esp32/sensors") {
+          const gasValue = message.data.gas;
+          console.log("Received gas value:", gasValue);
+          setGasData(gasValue);
 
-      // Gửi yêu cầu lấy trạng thái thiết bị
-      ws.send(JSON.stringify({ topic: "getDeviceStatus" }));
-    };
-
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-
-      if (message.topic === "deviceStatus") {
-        // Cập nhật trạng thái thiết bị
-        setDeviceStates((prev) => ({
-          ...prev,
-          [message.device]: {
-            status: message.status === "on",
-            loading: false,
-          },
-        }));
-      } else if (message.topic === "sensorData") {
-        // Cập nhật dữ liệu gas
-        const newGasValue = message.gas;
-        setGasData(newGasValue);
-
-        // Cập nhật dataStore
-        setDataStore((prev) => {
-          const newGasValues = [...prev.gasValues, newGasValue];
-          const newTimes = [...prev.times, new Date().toLocaleTimeString()];
-
-          if (newGasValues.length > MAX_DATA_POINTS) {
-            newGasValues.shift();
-            newTimes.shift();
+          if (gasValue > 70) {
+            console.log("Gas value > 70, updating warning count...");
+            await fetchWarningCount();
           }
 
-          return {
-            gasValues: newGasValues,
-            times: newTimes,
-          };
-        });
+          setDataStore((prev) => {
+            const newDataStore = {
+              gasValues: [...prev.gasValues, gasValue].slice(-MAX_DATA_POINTS),
+              times: [...prev.times, new Date().toLocaleTimeString()].slice(
+                -MAX_DATA_POINTS
+              ),
+            };
+            localStorage.setItem("gasChartData", JSON.stringify(newDataStore));
+            return newDataStore;
+          });
+        }
+
+        // Xử lý trạng thái thiết bị
+        if (message.topic && message.topic.includes("deviceStatus")) {
+          const device = message.topic.split("/")[1];
+          const status = message.data === "on";
+          setDeviceStates((prev) => {
+            const newStates = {
+              ...prev,
+              [device]: { status, loading: false },
+            };
+            localStorage.setItem("gasDeviceStates", JSON.stringify(newStates));
+            return newStates;
+          });
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
       }
     };
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+    // Fetch initial count
+    console.log("Component mounted, fetching initial count...");
+    fetchWarningCount();
 
-    ws.onclose = () => {
-      console.log("Disconnected from WebSocket");
-    };
+    // Cập nhật định kỳ mỗi phút
+    const intervalId = setInterval(() => {
+      console.log("Interval triggered, fetching count...");
+      fetchWarningCount();
+    }, 60000);
 
-    // Cleanup function
     return () => {
-      if (ws) {
-        ws.close();
-      }
+      clearInterval(intervalId);
+      newSocket.close();
     };
   }, []);
 

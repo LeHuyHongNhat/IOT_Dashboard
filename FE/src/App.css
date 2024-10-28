@@ -1,6 +1,6 @@
 /* Thiết lập cơ bản cho body */
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f4f4f4;
@@ -10,24 +10,31 @@ body {
 nav {
   background-color: #333;
   padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 nav button {
   color: white;
   background-color: #555;
   border: none;
-  padding: 10px;
+  padding: 10px 15px;
   margin: 5px;
   cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 nav button:hover {
   background-color: #777;
+  transform: scale(1.05);
 }
 
 /* Styles cho nội dung chính của trang */
 .page-content {
   padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Styles cho bảng */
@@ -40,12 +47,14 @@ table {
 table th,
 table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 12px;
+  text-align: center;
 }
 
 table th {
   background-color: #f2f2f2;
   text-align: left;
+  font-weight: bold;
 }
 
 table tr:nth-child(even) {
@@ -140,4 +149,48 @@ input:checked + .slider:before {
 
 #profile a:hover {
   text-decoration: underline;
+}
+
+/* Thêm một số hiệu ứng cho các phần tử */
+h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.device-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: box-shadow 0.3s;
+}
+
+.device-item:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Thêm hiệu ứng cho các nút */
+button {
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* Thêm hiệu ứng cho bảng */
+table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table th,
+table td {
+  transition: background-color 0.3s;
+}
+
+table tr:hover td {
+  background-color: #e0e0e0;
 }

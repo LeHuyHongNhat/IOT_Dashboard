@@ -1,10 +1,9 @@
-const express = require('express');
-const { postDataSensor } = require('../controllers/dataSensor');
+const express = require("express");
+const router = express.Router();
+const dataSensorController = require("../controllers/dataSensor");
 
-const route = express.Router(); // Tạo một instance của Router từ Express
+// Sửa lại routes để khớp với các hàm đã định nghĩa trong controller
+router.get("/", dataSensorController.getDataSensors); // Thay getAllDataSensor bằng getDataSensors
+router.get("/gas/warnings/count", dataSensorController.getGasWarningCount);
 
-// Định nghĩa route cho yêu cầu POST đến endpoint gốc ('/')
-route.post('/', postDataSensor);
-
-// Xuất module route để sử dụng ở nơi khác
-module.exports = route;
+module.exports = router;

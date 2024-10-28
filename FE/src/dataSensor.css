@@ -32,6 +32,7 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  min-width: 120px; /* Đảm bảo đủ rộng cho các option */
 }
 
 /* Styles cho nút tìm kiếm */
@@ -133,4 +134,46 @@
 /* Đẩy phần phân trang xuống cuối container */
 .container > *:last-child {
   margin-top: auto;
+}
+
+/* Thêm styles cho cột Gas */
+.gas-warning {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+.warning-icon {
+  margin-left: 5px;
+}
+
+.sorting-arrows {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorting-arrows span {
+  color: #999;
+  transition: color 0.2s;
+}
+
+.sorting-arrows span.active {
+  color: #007bff;
+}
+
+.sorting-arrows span.active.desc {
+  transform: rotate(180deg);
+  display: inline-block;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+}
+
+.header-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

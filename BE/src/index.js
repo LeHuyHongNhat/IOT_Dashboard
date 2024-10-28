@@ -2,14 +2,15 @@ const express = require("express");
 const morgan = require("morgan");
 const mqtt = require("mqtt");
 const WebSocket = require("ws");
-const router = require("./routes/index.js");
+const cors = require("cors");
+const { PrismaClient } = require("@prisma/client");
 const dataSensorModel = require("./models/dataSensor.js");
 const scheduleCronJobs = require("./controllers/cron.js");
 const app = express();
 const port = 3001; // Cổng cho backend
-const cors = require("cors");
 const { Device, Action } = require("@prisma/client");
 const actionHistoryModel = require("./models/actionHistory.js");
+const route = require("./routes");
 
 require("dotenv").config();
 
@@ -20,136 +21,133 @@ const deviceStates = {
   led: false,
 };
 
+// Thêm middleware để parse JSON
+app.use(express.json());
+
 // Cấu hình CORS cho phép truy cập từ frontend
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000"],
     credentials: true,
-    optionSuccessStatus: 200,
   })
 );
+
+route(app);
+
 app.use(morgan("dev")); // Ghi log các yêu cầu API đến server
 
-router(app); // Thiết lập routing cho server
-
-scheduleCronJobs(); // Lên lịch các công việc cron
-
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// WebSocket server
+const wss = new WebSocket.Server({
+  port: 8080,
+  // Thêm xử lý lỗi cho WebSocket
+  clientTracking: true,
+  handleProtocols: () => true,
 });
 
-// Kết nối đến MQTT broker
-const mqttClient = mqtt.connect(`mqtt://${process.env.HOST_LOCAL}:1995`, {
-  username: "lehuyhongnhat", // Thêm username nếu cần
-  password: "b21dccn575", // Thêm password nếu cần
-});
+// Xử lý kết nối WebSocket
+wss.on("connection", (ws) => {
+  console.log("New WebSocket connection");
 
-// Tạo WebSocket server
-const wss = new WebSocket.Server({ port: 8080 });
+  // Gửi message chào mừng
+  ws.send(
+    JSON.stringify({
+      type: "connection",
+      message: "Connected to WebSocket server",
+    })
+  );
 
-let clients = [];
-
-wss.on("connection", (ws, req) => {
-  console.log(`Client connected`);
-
-  // Thêm client vào danh sách
-  clients.push(ws);
-
-  // Loại bỏ client nếu kết nối bị đóng
-  ws.on("close", () => {
-    clients = clients.filter((client) => client !== ws);
-  });
-
-  // (Tùy chọn) In thông tin khi có lỗi xảy ra
-  ws.on("error", (error) => {
-    console.error(`WebSocket error:`, error);
-  });
-
-  // (Tùy chọn) In thông tin khi có tin nhắn đến
+  // Xử lý tin nhắn
   ws.on("message", async (data) => {
-    console.log(`Received message: ${data}`);
-    const { topic, message } = JSON.parse(data);
+    try {
+      const message = JSON.parse(data);
+      console.log("Received:", message);
 
-    if (topic === "getDeviceStatus") {
-      // Gửi trạng thái hiện tại của tất cả các thiết bị
-      Object.entries(deviceStates).forEach(([device, status]) => {
+      // Xử lý message tùy theo loại
+      if (message.type === "getDeviceStatus") {
+        // Gửi trạng thái thiết bị
         ws.send(
           JSON.stringify({
-            topic: `deviceStatus/${device}`,
-            data: status ? "on" : "off",
+            type: "deviceStatus",
+            data: deviceStates,
           })
         );
-      });
-    } else {
-      let deviceAction = {};
-      let deviceTopic = "";
-      if (topic == "action/air_conditioner") {
-        deviceAction.device = Device.AIR_CONDITIONER;
-        deviceTopic = "air_conditioner";
-      } else if (topic == "action/fan") {
-        deviceAction.device = Device.FAN;
-        deviceTopic = "fan";
-      } else if (topic == "action/led") {
-        deviceAction.device = Device.LED;
-        deviceTopic = "led";
       }
-      deviceAction.action = message == "on" ? Action.ON : Action.OFF;
-
-      // Lưu lịch sử hành động và gửi lệnh đến thiết bị qua MQTT
-      await actionHistoryModel.createActionHistory(deviceAction);
-      mqttClient.publish(topic, message);
-
-      // Cập nhật trạng thái thiết bị
-      deviceStates[deviceTopic] = message === "on";
-
-      // Giả lập phản hồi từ hardware sau 1.5 giây
-      setTimeout(() => {
-        const statusTopic = `esp32/deviceStatus/${deviceTopic}`;
-        mqttClient.publish(statusTopic, message);
-      }, 2000);
+    } catch (error) {
+      console.error("WebSocket message error:", error);
     }
   });
-});
 
-// Các chủ đề MQTT cần subscribe
-const topics = ["esp32/sensors", "esp32/deviceStatus/#"];
+  // Xử lý đóng kết nối
+  ws.on("close", () => {
+    console.log("Client disconnected");
+  });
 
-mqttClient.on("connect", () => {
-  topics.forEach((topic) => {
-    mqttClient.subscribe(topic, (err) => {
-      if (!err) {
-        console.log(`Subscribed to ${topic}`);
-      }
-    });
+  // Xử lý lỗi
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
   });
 });
 
-mqttClient.on("message", async (topic, message) => {
-  try {
-    if (topic == "esp32/sensors") {
-      const data = JSON.parse(message.toString());
-      const savedData = await dataSensorModel.createDataSensor(data);
+// Xử lý lỗi cho WebSocket server
+wss.on("error", (error) => {
+  console.error("WebSocket server error:", error);
+});
 
-      // Gửi dữ liệu cảm biến đến tất cả các client WebSocket
-      clients.forEach((client) => {
+// MQTT client
+const mqttClient = mqtt.connect(`mqtt://${process.env.HOST_LOCAL}:1995`, {
+  username: "lehuyhongnhat",
+  password: "b21dccn575",
+  reconnectPeriod: 1000,
+  connectTimeout: 30 * 1000,
+});
+
+// Xử lý kết nối MQTT
+mqttClient.on("connect", () => {
+  console.log("Connected to MQTT broker");
+  const topics = ["esp32/sensors", "esp32/deviceStatus/#"];
+  topics.forEach((topic) => {
+    mqttClient.subscribe(topic);
+  });
+});
+
+// Xử lý message MQTT
+mqttClient.on("message", async (topic, message) => {
+  if (topic === "esp32/sensors") {
+    try {
+      const data = JSON.parse(message.toString());
+      const sensorData = await dataSensorModel.createDataSensor({
+        temperature: data.temperature,
+        humidity: data.humidity,
+        light: data.light,
+        gas: data.gas || 0,
+      });
+
+      // Gửi dữ liệu qua WebSocket với cấu trúc đúng
+      wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(
             JSON.stringify({
               topic: "sensorData",
-              data: savedData,
+              data: {
+                temperature: sensorData.temperature,
+                humidity: sensorData.humidity,
+                light: sensorData.light,
+                gas: sensorData.gas,
+              },
             })
           );
         }
       });
-    } else if (topic.startsWith("esp32/deviceStatus/")) {
-      const device = topic.split("/")[2];
+    } catch (error) {
+      console.error("Error processing sensor data:", error);
+    }
+  } else if (topic.startsWith("esp32/deviceStatus/")) {
+    try {
+      const device = topic.split("/").pop();
       const status = message.toString();
 
-      // Cập nhật trạng thái thiết bị
-      deviceStates[device] = status === "on";
-
-      // Gửi trạng thái thiết bị đến tất cả các client WebSocket
-      clients.forEach((client) => {
+      // Gửi trạng thái thiết bị qua WebSocket
+      wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(
             JSON.stringify({
@@ -159,8 +157,38 @@ mqttClient.on("message", async (topic, message) => {
           );
         }
       });
+    } catch (error) {
+      console.error("Error processing device status:", error);
     }
-  } catch (error) {
-    console.error("Error processing MQTT message:", error);
   }
 });
+
+// Thêm error handling cho MQTT client
+mqttClient.on("error", (error) => {
+  console.error("MQTT Error:", error);
+});
+
+mqttClient.on("close", () => {
+  console.log("MQTT connection closed");
+});
+
+// Thêm error handling cho WebSocket server
+wss.on("error", (error) => {
+  console.error("WebSocket Server Error:", error);
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+
+// Thêm error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: "Internal Server Error!",
+    error: err.message,
+  });
+});
+
+scheduleCronJobs(); // Lên lịch các công việc cron
