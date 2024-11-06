@@ -164,3 +164,33 @@ mqttClient.on("message", async (topic, message) => {
     console.error("Error processing MQTT message:", error);
   }
 });
+
+// Cập nhật cấu hình CORS
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://your-swagger-domain"], // Thêm domain của Swagger
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Thêm các phương thức HTTP được phép
+    allowedHeaders: ["Content-Type", "Authorization"], // Thêm các header được phép
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
+
+// Thêm middleware để xử lý OPTIONS request
+app.options("*", cors());
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || "Có lỗi xảy ra!",
+    error: process.env.NODE_ENV === "development" ? err : {},
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Không tìm thấy endpoint này!",
+  });
+});

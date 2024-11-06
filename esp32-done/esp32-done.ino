@@ -6,7 +6,7 @@
 // Thông tin kết nối WiFi và MQTT
 const char* ssid = "Px0x";
 const char* password = "11335577";
-const char* mqtt_server = "192.168.0.102";
+const char* mqtt_server = "192.168.0.101";
 const int mqtt_port = 1995;
 const char* mqtt_topic_sensors = "esp32/sensors";
 const char* mqtt_topic_led = "esp32/deviceStatus/led";

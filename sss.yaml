@@ -1,0 +1,170 @@
+swagger: '2.0'
+info:
+  title: IoT Dashboard API
+  version: '1.0.0'
+  description: API for managing IoT sensor data and action history with real-time updates via WebSocket
+
+host: localhost:3001
+basePath: /
+schemes:
+  - http
+  - ws
+
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: 'JWT Bearer token. Format: Bearer {token}'
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login to get access token
+      security: []
+      parameters:
+        - in: body
+          name: credentials
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                example: "lehuyhongnhat"
+              password:
+                type: string
+                example: "b21dccn575"
+      responses:
+        200:
+          description: Login successful
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+        401:
+          description: Invalid credentials
+
+  /table/data:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Table Data
+      summary: Get sensor data or action history
+      parameters:
+        - in: query
+          name: content
+          type: string
+          description: Sensor content ID
+          required: false
+        - in: query
+          name: searchBy
+          type: string
+          enum: [ALL, LED]
+          description: Search criteria
+          required: true
+        - in: query
+          name: page
+          type: integer
+          minimum: 1
+          description: Page number
+          required: true
+        - in: query
+          name: pageSize
+          type: integer
+          minimum: 1
+          description: Number of items per page
+          required: true
+        - in: query
+          name: startTime
+          type: string
+          format: date-time
+          description: Start time for data filtering
+          required: true
+        - in: query
+          name: endTime
+          type: string
+          format: date-time
+          description: End time for data filtering
+          required: true
+        - in: query
+          name: orderBy
+          type: string
+          enum: [TEMPERATURE]
+          description: Field to order by
+          required: false
+        - in: query
+          name: sortBy
+          type: string
+          enum: [ASC, DESC]
+          description: Sort direction
+          required: false
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: date-time
+                    temperature:
+                      type: number
+                      format: float
+                    humidity:
+                      type: number
+                      format: float
+                    content:
+                      type: string
+                    action:
+                      type: string
+                    component:
+                      type: string
+                    status:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  currentPage:
+                    type: integer
+                    format: int32
+                  pageSize:
+                    type: integer
+                    format: int32
+                  totalItems:
+                    type: integer
+                    format: int32
+                  totalPages:
+                    type: integer
+                    format: int32
+                required:
+                  - currentPage
+                  - pageSize
+                  - totalItems
+                  - totalPages
+        400:
+          description: Bad request - Invalid parameters
+        403:
+          description: Forbidden - Authentication required or insufficient permissions
+        500:
+          description: Internal server error
+
+  /ws:
+    get:
+      security:
+        - BearerAuth: []
+      # ... rest of the endpoint definition remains the same ...

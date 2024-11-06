@@ -64,7 +64,7 @@ const Profile = () => {
           <p className="profile-info">
             <FaBook className="icon" />
             <a
-              href="https://github.com/LeHuyHongNhat/IOT_Dashboard/blob/2dc247369ae2ea500f56d0ae340015929561b3b8/dashboard-iot.postman_collection.json"
+              href="https://documenter.getpostman.com/view/38904764/2sAY4vg32o"
               target="_blank"
               rel="noopener noreferrer"
             >
