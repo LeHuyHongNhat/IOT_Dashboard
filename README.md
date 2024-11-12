@@ -186,6 +186,7 @@ const char* mqtt_server = "Your_MQTT_Broker_Address";
 ## 📄 Giấy phép
 
 Dự án này được phân phối dưới giấy phép [MIT](LICENSE). Xem file [`LICENSE`](LICENSE) để biết thêm chi tiết.
+Dự án này được phân phối dưới giấy phép [MIT](https://github.com/LeHuyHongNhat/IOT_Dashboard/blob/main/LICENSE). Xem file [`LICENSE`](https://github.com/LeHuyHongNhat/IOT_Dashboard/blob/main/LICENSE) để biết thêm chi tiết.
 
 ## 📧 Liên hệ
 
