@@ -1,196 +1,207 @@
-# IoT Dashboard
+<div align="center">
+
+# 🌐 IoT Dashboard
 
 ![IoT Dashboard Logo](FE/public/IoT-1.jpg)
 
-## Giới thiệu
+*A comprehensive solution for monitoring and controlling IoT devices through an intuitive web interface*
 
-IoT Dashboard là một dự án toàn diện cho phép giám sát và điều khiển các thiết bị IoT thông qua một giao diện web trực quan. Dự án bao gồm ba phần chính: Backend, Frontend và mã nguồn cho thiết bị ESP32. Hệ thống này cung cấp một giải pháp end-to-end cho việc quản lý và tương tác với các thiết bị IoT trong môi trường thông minh.
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)](https://expressjs.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 
-### Tác giả
+</div>
 
-Lê Huy Hồng Nhật - Sinh viên tại Học viện Công nghệ Bưu chính Viễn thông (PTIT)
+## 👨‍💻 Tác giả
 
-## Mục lục
+**Lê Huy Hồng Nhật**  
+Sinh viên tại Học viện Công nghệ Bưu chính Viễn thông (PTIT)
 
-- [Tính năng](#tính-năng)
-- [Cấu trúc dự án](#cấu-trúc-dự-án)
-- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
-- [Cài đặt](#cài-đặt)
-- [Sử dụng](#sử-dụng)
-- [API Documentation](#api-documentation)
-- [Đóng góp](#đóng-góp)
-- [Giấy phép](#giấy-phép)
-- [Liên hệ](#liên-hệ)
+## 📑 Mục lục
 
-## Tính năng
+- [🌟 Tính năng](#-tính-năng)
+- [🏗️ Cấu trúc dự án](#️-cấu-trúc-dự-án)
+- [🛠️ Công nghệ sử dụng](#️-công-nghệ-sử-dụng)
+- [⚙️ Cài đặt](#️-cài-đặt)
+- [📱 Sử dụng](#-sử-dụng)
+- [📚 API Documentation](#-api-documentation)
+- [🤝 Đóng góp](#-đóng-góp)
+- [📄 Giấy phép](#-giấy-phép)
+- [📧 Liên hệ](#-liên-hệ)
 
-- **Hiển thị dữ liệu cảm biến theo thời gian thực**: Cập nhật liên tục các chỉ số như nhiệt độ, độ ẩm, ánh sáng từ các thiết bị IoT.
-- **Điều khiển thiết bị IoT từ xa**: Bật/tắt các thiết bị thông qua dashboard.
-- **Giao diện người dùng thân thiện và responsive**: Thiết kế tương thích với nhiều kích thước màn hình.
-- **Xác thực và phân quyền người dùng**: Hệ thống đăng nhập an toàn và quản lý quyền truy cập.
-- **Lưu trữ và phân tích dữ liệu lịch sử**: Khả năng xem lại và phân tích dữ liệu theo thời gian.
-- **Cảnh báo và thông báo**: Gửi thông báo khi các chỉ số vượt ngưỡng định sẵn.
+## 🌟 Tính năng
 
-## Cấu trúc dự án
+| Tính năng | Mô tả |
+|-----------|--------|
+| 📊 **Realtime Data** | Cập nhật liên tục các chỉ số nhiệt độ, độ ẩm, ánh sáng |
+| 🎮 **Remote Control** | Điều khiển thiết bị từ xa qua dashboard |
+| 📱 **Responsive UI** | Giao diện tương thích mọi thiết bị |
+| 🔐 **Authentication** | Hệ thống đăng nhập và phân quyền an toàn |
+| 📈 **Data Analysis** | Phân tích và xem lại dữ liệu lịch sử |
+| ⚡ **Alerts** | Thông báo khi chỉ số vượt ngưỡng |
 
-Dự án được chia thành ba phần chính:
+## 🏗️ Cấu trúc dự án
 
-1. **Backend (BE)**:
+```mermaid
+graph TD
+    A[IoT Dashboard] --> B[Backend - BE]
+    A --> C[Frontend - FE]
+    A --> D[ESP32]
+    B --> E[Node.js + Express]
+    B --> F[Prisma ORM]
+    B --> G[MQTT]
+    C --> H[React.js]
+    C --> I[Chart.js]
+    D --> J[Arduino IDE]
+    D --> K[WiFi + MQTT]
+```
 
-   - Xử lý dữ liệu và cung cấp API RESTful
-   - Quản lý kết nối với cơ sở dữ liệu
-   - Xử lý logic nghiệp vụ và xác thực
-   - Kết nối với thiết bị IoT thông qua MQTT
+### 🔧 Backend (BE)
+- Xử lý dữ liệu và cung cấp API RESTful
+- Quản lý kết nối với cơ sở dữ liệu
+- Xử lý logic nghiệp vụ và xác thực
+- Kết nối với thiết bị IoT thông qua MQTT
 
-2. **Frontend (FE)**:
+### 🎨 Frontend (FE)
+- Giao diện người dùng web sử dụng React
+- Hiển thị dữ liệu dưới dạng biểu đồ và bảng
+- Cung cấp các điều khiển để tương tác với thiết bị IoT
 
-   - Giao diện người dùng web sử dụng React
-   - Hiển thị dữ liệu dưới dạng biểu đồ và bảng
-   - Cung cấp các điều khiển để tương tác với thiết bị IoT
+### 🔌 ESP32
+- Mã nguồn cho thiết bị IoT
+- Đọc dữ liệu từ cảm biến và gửi lên server
+- Nhận lệnh điều khiển từ server và thực thi
 
-3. **ESP32**:
-   - Mã nguồn cho thiết bị IoT
-   - Đọc dữ liệu từ cảm biến và gửi lên server
-   - Nhận lệnh điều khiển từ server và thực thi
+## 🛠️ Công nghệ sử dụng
 
-## Công nghệ sử dụng
+<div align="center">
 
-### Backend
+### Backend Stack
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)](https://www.prisma.io/)
+[![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
 
-- **Node.js** với **Express.js**: Nền tảng phát triển server-side
-- **Prisma ORM**: ORM hiện đại cho Node.js và TypeScript
-- **MQTT**: Giao thức nhẹ để kết nối với thiết bị IoT
-- **WebSocket** và **Socket.io**: Cho kết nối realtime giữa server và client
-- **JWT (JSON Web Tokens)**: Xác thực và bảo mật API
-- **MySQL**: Hệ quản trị cơ sở dữ liệu quan hệ
+### Frontend Stack
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chart.js&logoColor=white)](https://www.chartjs.org/)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
+[![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge)](https://axios-http.com/)
 
-### Frontend
+### IoT Stack
+[![Arduino](https://img.shields.io/badge/Arduino_IDE-00979D?style=for-the-badge&logo=arduino&logoColor=white)](https://www.arduino.cc/)
+[![ESP32](https://img.shields.io/badge/ESP32-E7352C?style=for-the-badge&logo=espressif&logoColor=white)](https://www.espressif.com/)
+[![MQTT](https://img.shields.io/badge/MQTT-3C5280?style=for-the-badge&logo=eclipse-mosquitto&logoColor=white)](https://mqtt.org/)
 
-- **React.js**: Thư viện JavaScript để xây dựng giao diện người dùng
-- **Chart.js**: Thư viện tạo biểu đồ tương tác
-- **Axios**: Thư viện HTTP client dựa trên Promise
-- **React Router**: Quản lý định tuyến trong ứng dụng React
-- **Bootstrap**: Framework CSS cho thiết kế responsive
+</div>
 
-### ESP32
+## ⚙️ Cài đặt
 
-- **Arduino IDE**: Môi trường phát triển tích hợp cho ESP32
-- **Thư viện WiFi**: Kết nối ESP32 với mạng WiFi
-- **Thư viện MQTT**: Giao tiếp với MQTT broker
-- **Thư viện cảm biến**: Đọc dữ liệu từ các cảm biến (ví dụ: DHT11, LDR)
+### Prerequisites
 
-## Cài đặt
+```bash
+Node.js (v14.0.0+)
+npm (v6.0.0+)
+MySQL (v8.0+)
+Arduino IDE (v1.8.0+)
+```
 
-### Yêu cầu hệ thống
+### Backend Setup
 
-- Node.js (v14.0.0 trở lên)
-- npm (v6.0.0 trở lên)
-- MySQL (v8.0 trở lên)
-- Arduino IDE (v1.8.0 trở lên)
+```bash
+# Di chuyển vào thư mục BE
+cd BE
 
-### Backend
+# Cài đặt dependencies
+npm install
 
-1. Di chuyển vào thư mục BE:
-   ```
-   cd BE
-   ```
-2. Cài đặt dependencies:
-   ```
-   npm install
-   ```
-3. Tạo file `.env` và cấu hình các biến môi trường (xem `.env.example`):
-   ```
-   cp .env.example .env
-   ```
-4. Chỉnh sửa file `.env` với thông tin cấu hình của bạn
-5. Chạy migrations để cập nhật cơ sở dữ liệu:
-   ```
-   npx prisma migrate dev
-   ```
-6. Khởi động server:
-   ```
-   npm start
-   ```
+# Tạo file .env
+cp .env.example .env
 
-### Frontend
+# Chạy migrations
+npx prisma migrate dev
 
-1. Di chuyển vào thư mục FE:
-   ```
-   cd FE
-   ```
-2. Cài đặt dependencies:
-   ```
-   npm install
-   ```
-3. Tạo file `.env.local` và cấu hình các biến môi trường:
-   ```
-   cp .env.example .env.local
-   ```
-4. Chỉnh sửa file `.env.local` với thông tin cấu hình của bạn
-5. Khởi động ứng dụng:
-   ```
-   npm start
-   ```
+# Khởi động server
+npm start
+```
 
-### ESP32
+### Frontend Setup
 
-1. Mở project trong Arduino IDE
-2. Cài đặt các thư viện cần thiết thông qua Library Manager:
-   - WiFi
-   - PubSubClient (cho MQTT)
-   - ArduinoJson
-   - DHT sensor library (nếu sử dụng cảm biến DHT)
-3. Cấu hình thông tin WiFi và MQTT broker trong mã nguồn:
-   ```cpp
-   const char* ssid = "Your_WiFi_SSID";
-   const char* password = "Your_WiFi_Password";
-   const char* mqtt_server = "Your_MQTT_Broker_Address";
-   ```
-4. Compile và upload mã nguồn lên thiết bị ESP32
+```bash
+# Di chuyển vào thư mục FE
+cd FE
 
-## Sử dụng
+# Cài đặt dependencies
+npm install
 
-1. Truy cập dashboard thông qua trình duyệt web tại `http://localhost:3000`
-2. Xem dữ liệu cảm biến và điều khiển thiết bị từ giao diện dashboard
-3. Sử dụng các tính năng như:
-   - Xem biểu đồ dữ liệu theo thời gian thực
-   - Điều khiển thiết bị
-   - Xem lịch sử dữ liệu
-   - Xem thông tin cá nhân
+# Tạo file .env.local
+cp .env.example .env.local
 
-## API Documentation
+# Khởi động ứng dụng
+npm start
+```
 
-Chi tiết về các API có sẵn và cách sử dụng chúng có thể được tìm thấy trong [API Documentation](https://schema.getpostman.com/json/collection/v2.1.0/collection.json).
+### ESP32 Setup
 
-Các endpoint chính bao gồm:
+```cpp
+// Cấu hình trong Arduino IDE
+const char* ssid = "Your_WiFi_SSID";
+const char* password = "Your_WiFi_Password";
+const char* mqtt_server = "Your_MQTT_Broker_Address";
+```
 
-- `/api/auth`: Xác thực người dùng
-- `/api/devices`: Quản lý thiết bị
-- `/api/data`: Truy xuất dữ liệu cảm biến
-- `/api/control`: Điều khiển thiết bị
+## 📱 Sử dụng
 
-## Đóng góp
+1. Truy cập dashboard: `http://localhost:3000`
+2. Các tính năng chính:
+   - 📊 Xem biểu đồ realtime
+   - 🎮 Điều khiển thiết bị
+   - 📈 Xem lịch sử dữ liệu
+   - 👤 Quản lý thông tin cá nhân
 
-Chúng tôi rất hoan nghênh mọi đóng góp cho dự án. Nếu bạn muốn đóng góp, vui lòng:
+## 📚 API Documentation
+
+### Endpoints
+
+| Endpoint | Mô tả |
+|----------|--------|
+| `/api/auth` | 🔐 Xác thực người dùng |
+| `/api/devices` | 📱 Quản lý thiết bị |
+| `/api/data` | 📊 Truy xuất dữ liệu cảm biến |
+| `/api/control` | 🎮 Điều khiển thiết bị |
+
+[Chi tiết API →](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
+
+## 🤝 Đóng góp
 
 1. Fork repository
 2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit các thay đổi (`git commit -m 'Add some AmazingFeature'`)
+3. Commit thay đổi (`git commit -m 'Add some AmazingFeature'`)
 4. Push lên branch (`git push origin feature/AmazingFeature`)
 5. Mở Pull Request
 
-Vui lòng đảm bảo cập nhật tests khi thích hợp và tuân thủ coding style của dự án.
+## 📄 Giấy phép
 
-## Giấy phép
+Dự án này được phân phối dưới giấy phép [MIT](LICENSE). Xem file [`LICENSE`](LICENSE) để biết thêm chi tiết.
 
-Dự án này được phân phối dưới giấy phép [MIT](LICENSE). Xem file `LICENSE` để biết thêm chi tiết.
+## 📧 Liên hệ
 
-## Liên hệ
-
-Lê Huy Hồng Nhật - [@LeHuyHongNhat](https://github.com/LeHuyHongNhat) - NhatLHH.B21CN575@stu.ptit.edu.vn
-
-Link dự án: [https://github.com/LeHuyHongNhat/IoT-Dashboard](https://github.com/LeHuyHongNhat/IoT-Dashboard)
+👨‍💻 **Lê Huy Hồng Nhật**
+- GitHub: [@LeHuyHongNhat](https://github.com/LeHuyHongNhat)
+- Email: NhatLHH.B21CN575@stu.ptit.edu.vn
+- Project Link: [IoT Dashboard](https://github.com/LeHuyHongNhat/IoT-Dashboard)
 
 ---
 
-© 2024 Lê Huy Hồng Nhật. Bảo lưu mọi quyền.
+<div align="center">
+
+### ⭐ Star us on GitHub — it helps!
+
+Made with ❤️ by Lê Huy Hồng Nhật
+
+© 2024 Lê Huy Hồng Nhật. All rights reserved.
+
+</div>
