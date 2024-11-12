@@ -3,7 +3,12 @@ const prisma = require("./db-client");
 // Hàm tạo một bản ghi dữ liệu cảm biến mới
 const createDataSensor = async (data) => {
   return await prisma.sensorData.create({
-    data: data,
+    data: {
+      temperature: data.temperature,
+      humidity: data.humidity,
+      light: data.light,
+      wind: data.wind,
+    },
   });
 };
 
@@ -29,6 +34,10 @@ const findDataSensorByContidion = async (condition, pagination, order) => {
       gte: condition.createdAt,
       lt: new Date(condition.createdAt.getTime() + 1000), // Thêm 1 giây để bao gồm cả thời điểm tìm kiếm
     };
+  }
+
+  if (condition.wind) {
+    condition.wind = Number(condition.wind);
   }
 
   return await prisma.sensorData.findMany({

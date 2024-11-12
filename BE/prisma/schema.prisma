@@ -13,6 +13,7 @@ model SensorData {
   temperature Int
   humidity    Int
   light       Int
+  wind        Int      @default(0)
   createdAt   DateTime @default(now())
 
   @@map("sensor_data")

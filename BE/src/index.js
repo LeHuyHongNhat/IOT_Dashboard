@@ -128,6 +128,11 @@ mqttClient.on("message", async (topic, message) => {
   try {
     if (topic == "esp32/sensors") {
       const data = JSON.parse(message.toString());
+      // Đảm bảo có giá trị wind
+      if (data.wind === undefined) {
+        data.wind = 0;
+      }
+
       const savedData = await dataSensorModel.createDataSensor(data);
 
       // Gửi dữ liệu cảm biến đến tất cả các client WebSocket

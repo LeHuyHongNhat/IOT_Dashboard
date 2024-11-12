@@ -70,6 +70,9 @@ async function getDataSensors(req, res) {
           );
           condition.createdAt = searchDate;
           break;
+        case "WIND":
+          condition.wind = Number(content);
+          break;
         case "ALL":
           // Tìm kiếm theo tất cả các trường
           condition.OR = [
@@ -84,13 +87,14 @@ async function getDataSensors(req, res) {
                 equals: new Date(content),
               },
             },
+            { wind: isNaN(Number(content)) ? undefined : Number(content) },
           ].filter((c) => Object.values(c)[0] !== undefined);
           break;
         default:
           // Trả về lỗi nếu searchBy không hợp lệ
           res.status(400).json({
             message:
-              "searchBy phải là một trong các tham số sau [ALL,TEMPERATURE,HUMIDITY,LIGHT,ID,TIME]",
+              "searchBy phải là một trong các tham số sau [ALL,TEMPERATURE,HUMIDITY,LIGHT,ID,TIME,WIND]",
           });
           return;
       }
@@ -124,11 +128,14 @@ async function getDataSensors(req, res) {
         case "TIME":
           order.createdAt = orderBy;
           break;
+        case "WIND":
+          order.wind = orderBy;
+          break;
         default:
           // Trả về lỗi nếu sortBy không hợp lệ
           res.status(400).json({
             message:
-              "sortBy must be one of the following parameters [TIME,TEMPERATURE,HUMIDITY,LIGHT,ID]",
+              "sortBy must be one of the following parameters [TIME,TEMPERATURE,HUMIDITY,LIGHT,WIND,ID]",
           });
           break;
       }

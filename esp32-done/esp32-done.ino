@@ -4,9 +4,9 @@
 #include <math.h>
 
 // Thông tin kết nối WiFi và MQTT
-const char* ssid = "Px0x";
-const char* password = "11335577";
-const char* mqtt_server = "192.168.0.102";
+const char* ssid = "Icloud<3";
+const char* password = "123456789v";
+const char* mqtt_server = "172.20.10.6";
 const int mqtt_port = 1995;
 const char* mqtt_topic_sensors = "esp32/sensors";
 const char* mqtt_topic_led = "esp32/deviceStatus/led";
@@ -25,11 +25,42 @@ PubSubClient client(espClient);
 #define LED_PIN 25
 #define AIR_CONDITIONER_PIN 26
 #define FAN_PIN 27
+#define WARNING_LED_PIN 33
 
 DHT dht(DHT_PIN, DHTTYPE);
 
 unsigned long lastMsg = 0;
 const long interval = 2000;  // Khoảng thời gian giữa các lần gửi dữ liệu cảm biến
+
+// Thêm biến cho LED nhấp nháy
+const int BLINK_COUNT = 10;
+const int BLINK_INTERVAL = 200; // 200ms cho mỗi lần nhấp nháy
+bool isBlinking = false;
+unsigned long lastBlink = 0;
+int blinkCounter = 0;
+
+// Hàm xử lý nhấp nháy LED cảnh báo
+void handleWarningLED(int windSpeed) {
+  if (windSpeed >= 60 && !isBlinking) {
+    isBlinking = true;
+    blinkCounter = 0;
+    lastBlink = millis();
+  }
+
+  if (isBlinking) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastBlink >= BLINK_INTERVAL) {
+      lastBlink = currentMillis;
+      if (blinkCounter < BLINK_COUNT * 2) { // Nhân 2 vì mỗi chu kỳ nhấp nháy cần 2 trạng thái
+        digitalWrite(WARNING_LED_PIN, !digitalRead(WARNING_LED_PIN));
+        blinkCounter++;
+      } else {
+        isBlinking = false;
+        digitalWrite(WARNING_LED_PIN, LOW);
+      }
+    }
+  }
+}
 
 // Hàm kết nối WiFi
 void setup_wifi() {
@@ -116,6 +147,7 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(AIR_CONDITIONER_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
+  pinMode(WARNING_LED_PIN, OUTPUT);
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
@@ -136,6 +168,10 @@ void loop() {
     int humidity = round(dht.readHumidity());
     int temperature = round(dht.readTemperature());
     int light = ceil(analogRead(QUANG_TRO_PIN)/4) + 1;
+    int wind = random(0, 101); // Thêm giá trị gió random từ 0-100
+
+    // Xử lý LED cảnh báo
+    handleWarningLED(wind);
 
     // Tạo chuỗi JSON chứa dữ liệu cảm biến
     String payload = "{\"temperature\": ";
@@ -144,6 +180,8 @@ void loop() {
     payload += humidity;
     payload += ", \"light\": ";
     payload += light;
+    payload += ", \"wind\": ";  // Thêm giá trị wind vào JSON
+    payload += wind;
     payload += "}";
     Serial.println(payload);
 
@@ -152,5 +190,10 @@ void loop() {
 
     // Gửi trạng thái thiết bị
     publishDeviceStatus();
+  }
+
+  // Xử lý LED cảnh báo trong vòng lặp chính
+  if (isBlinking) {
+    handleWarningLED(60); // Truyền giá trị 60 để duy trì trạng thái nhấp nháy
   }
 }

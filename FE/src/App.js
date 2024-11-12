@@ -4,6 +4,7 @@ import Dashboard from "./Dashboard";
 import DataSensor from "./DataSensor";
 import ActionHistory from "./ActionHistory";
 import Profile from "./Profile";
+import WindMonitor from "./WindMonitor";
 
 const App = () => {
   // State để lưu trữ trang hiện tại
@@ -18,6 +19,8 @@ const App = () => {
         return <DataSensor />;
       case "ActionHistory":
         return <ActionHistory />;
+      case "WindMonitor":
+        return <WindMonitor />;
       case "Profile":
         return <Profile />;
       default:
@@ -29,6 +32,7 @@ const App = () => {
     <div>
       {/* Thanh điều hướng */}
       <nav>
+        <button onClick={() => setCurrentPage("WindMonitor")}>Bai 5</button>
         <button onClick={() => setCurrentPage("Dashboard")}>Dashboard</button>
         <button onClick={() => setCurrentPage("DataSensor")}>
           Data Sensor
